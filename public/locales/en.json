@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "MindCare",
+    "tagline": "Secure Mental Health Care, Anywhere",
+    "login": "Login",
+    "signup": "Sign Up",
+    "logout": "Logout",
+    "back": "Back",
+    "next": "Next",
+    "cancel": "Cancel",
+    "submit": "Submit",
+    "save": "Save",
+    "delete": "Delete",
+    "edit": "Edit",
+    "loading": "Loading...",
+    "error": "Error",
+    "success": "Success"
+  },
+  "nav": {
+    "home": "Home",
+    "findDoctor": "Find a Doctor",
+    "joinPatient": "Join as Patient",
+    "doctorDashboard": "Doctor Dashboard",
+    "dashboard": "Dashboard"
+  },
+  "home": {
+    "title": "Secure Mental Health Care, Anywhere",
+    "subtitle": "Connect with licensed psychiatrists, psychologists, and counselors through secure video, audio, or text sessions.",
+    "cta1": "Find a Doctor",
+    "cta2": "Join as Patient",
+    "feature1Title": "Secure Sessions",
+    "feature1Desc": "End-to-end encrypted video, audio, and text sessions for complete privacy.",
+    "feature2Title": "E-Prescriptions",
+    "feature2Desc": "Licensed psychiatrists can prescribe medications digitally where legally permitted.",
+    "feature3Title": "Smart Reminders",
+    "feature3Desc": "Automated follow-up scheduling and appointment reminders."
+  },
+  "doctors": {
+    "title": "Find Your Doctor",
+    "filterSpecialization": "All Specializations",
+    "filterLanguage": "All Languages",
+    "filterFeeRange": "Fee Range",
+    "psychiatrist": "Psychiatrist",
+    "psychologist": "Psychologist",
+    "counselor": "Counselor",
+    "arabic": "Arabic",
+    "english": "English",
+    "kurdish": "Kurdish",
+    "yearsExp": "Years Experience",
+    "ratePerSession": "Rate per Session",
+    "bookNow": "Book Now"
+  },
+  "booking": {
+    "title": "Book Appointment",
+    "sessionType": "Session Type",
+    "videoCall": "Video Call",
+    "audioCall": "Audio Call",
+    "textChat": "Text Chat",
+    "preferredDate": "Preferred Date",
+    "preferredTime": "Preferred Time",
+    "reasonForVisit": "Reason for Visit",
+    "emergencyContact": "Emergency Contact",
+    "confirmBooking": "Confirm Booking"
+  },
+  "auth": {
+    "register": "Create Your Account",
+    "registerDesc": "Join MindCare to start your mental health journey",
+    "fullName": "Full Name",
+    "email": "Email",
+    "phone": "Phone Number",
+    "dateOfBirth": "Date of Birth",
+    "password": "Password",
+    "confirmPassword": "Confirm Password",
+    "createAccount": "Create Account",
+    "alreadyHaveAccount": "Already have an account? Sign in",
+    "login": "Welcome Back",
+    "loginDesc": "Sign in to your MindCare account",
+    "signIn": "Sign In",
+    "dontHaveAccount": "Don't have an account? Sign up",
+    "forgotPassword": "Forgot Password?"
+  },
+  "dashboard": {
+    "title": "Your Dashboard",
+    "upcoming": "Upcoming",
+    "completed": "Completed",
+    "prescriptions": "Prescriptions",
+    "reminders": "Reminders",
+    "upcomingAppointments": "Upcoming Appointments",
+    "bookNewAppointment": "Book New Appointment",
+    "manageReminders": "Manage Reminders"
+  }
+}

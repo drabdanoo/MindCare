@@ -1,0 +1,571 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MindCare - Secure Mental Health Care</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://meet.jit.si/external_api.js"></script>
+  <style>
+    body {
+      box-sizing: border-box;
+    }
+    html[dir="rtl"] {
+      direction: rtl;
+    }
+    .fade-in {
+      animation: fadeIn 0.3s ease-in;
+    }
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    .pulse-dot {
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,
+      100% {
+        opacity: 1;
+      }
+      50% {
+        opacity: 0.5;
+      }
+    }
+    .lang-btn.active {
+      background-color: #2563eb;
+      color: white;
+    }
+  </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
+  <!-- Navigation -->
+  <nav class="bg-white shadow-lg sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="flex justify-between items-center h-16">
+        <!-- Logo -->
+        <div class="flex items-center">
+          <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+            <span class="text-white font-bold text-lg">M</span>
+          </div>
+          <span class="ml-2 text-xl font-bold text-gray-900">MindCare</span>
+        </div>
+
+        <!-- Language Switcher -->
+        <div class="flex items-center space-x-2">
+          <button data-lang="en" class="lang-btn px-3 py-1 rounded text-sm font-medium border border-gray-300">EN</button>
+          <button data-lang="ar" class="lang-btn px-3 py-1 rounded text-sm font-medium border border-gray-300">العربية</button>
+          <button data-lang="ku" class="lang-btn px-3 py-1 rounded text-sm font-medium border border-gray-300">کوردی</button>
+        </div>
+
+        <!-- Auth Buttons -->
+        <div class="flex items-center space-x-4">
+          <div id="navUser" class="hidden text-sm text-gray-600"></div>
+          <button id="navDoctorBtn" class="hidden text-blue-700 hover:text-blue-900 px-3 py-2 rounded-md text-sm font-medium" data-nav="doctorDashboard">Doctor Dashboard</button>
+          <button id="navLoginBtn" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium" data-nav="login">Login</button>
+          <button id="navSignupBtn" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium" data-nav="register">Sign Up</button>
+          <button id="navLogoutBtn" class="hidden text-red-600 hover:text-red-700 px-3 py-2 rounded-md text-sm font-medium">Logout</button>
+        </div>
+      </div>
+    </div>
+  </nav>
+
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Home Page -->
+    <section id="homePage" class="fade-in">
+      <div class="text-center mb-12">
+        <h1 class="text-4xl font-bold text-gray-900 mb-4" data-i18n="home.title">Secure Mental Health Care, Anywhere</h1>
+        <p class="text-xl text-gray-600 mb-8" data-i18n="home.subtitle">Connect with licensed psychiatrists, psychologists, and counselors through secure video, audio, or text sessions.</p>
+        <div class="flex justify-center space-x-4">
+          <button id="ctaFindDoctor" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium" data-i18n="home.cta1">Find a Doctor</button>
+          <button id="ctaJoin" class="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg text-lg font-medium" data-i18n="home.cta2">Join as Patient</button>
+          <button id="ctaJoinDoctor" data-nav="doctorRegister" class="border-2 border-green-600 text-green-600 hover:bg-green-50 px-8 py-3 rounded-lg text-lg font-medium">Join as Doctor</button>
+        </div>
+      </div>
+
+      <!-- Features -->
+      <div class="grid md:grid-cols-3 gap-8 mb-12">
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">🔒</div>
+          <h3 class="text-xl font-semibold mb-2" data-i18n="home.feature1Title">Secure Sessions</h3>
+          <p class="text-gray-600" data-i18n="home.feature1Desc">End-to-end encrypted video, audio, and text sessions for complete privacy.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">💊</div>
+          <h3 class="text-xl font-semibold mb-2" data-i18n="home.feature2Title">E-Prescriptions</h3>
+          <p class="text-gray-600" data-i18n="home.feature2Desc">Licensed psychiatrists can prescribe medications digitally where legally permitted.</p>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">📅</div>
+          <h3 class="text-xl font-semibold mb-2" data-i18n="home.feature3Title">Smart Reminders</h3>
+          <p class="text-gray-600" data-i18n="home.feature3Desc">Automated follow-up scheduling and appointment reminders.</p>
+        </div>
+      </div>
+
+      <!-- Trust Section -->
+      <div class="bg-white p-8 rounded-xl shadow-lg mb-12">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6 text-center">Why Choose MindCare?</h2>
+        <div class="grid md:grid-cols-4 gap-6">
+          <div class="text-center">
+            <div class="text-4xl mb-2">🛡️</div>
+            <h3 class="font-semibold mb-2">HIPAA Compliant</h3>
+            <p class="text-sm text-gray-600">Your data is protected with industry-standard encryption</p>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl mb-2">⏰</div>
+            <h3 class="font-semibold mb-2">24/7 Available</h3>
+            <p class="text-sm text-gray-600">Book appointments at your convenience</p>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl mb-2">🌍</div>
+            <h3 class="font-semibold mb-2">Multi-Language</h3>
+            <p class="text-sm text-gray-600">Support for Arabic, English, and Kurdish</p>
+          </div>
+          <div class="text-center">
+            <div class="text-4xl mb-2">💰</div>
+            <h3 class="font-semibold mb-2">Affordable</h3>
+            <p class="text-sm text-gray-600">Competitive rates for quality mental health care</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Doctors Page -->
+    <section id="doctorsPage" class="hidden fade-in">
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-900" data-i18n="doctors.title">Find Your Doctor</h2>
+        <button data-nav="home" class="text-blue-600 hover:text-blue-800">← Back to Home</button>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+        <div class="grid md:grid-cols-4 gap-4">
+          <div>
+            <label for="filterSpec" class="sr-only">Specialization</label>
+            <select id="filterSpec" class="border border-gray-300 rounded-lg px-3 py-2 w-full" title="Filter by specialization">
+              <option>All Specializations</option>
+              <option>Psychiatrist</option>
+              <option>Psychologist</option>
+              <option>Counselor</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterLang" class="sr-only">Language</label>
+            <select id="filterLang" class="border border-gray-300 rounded-lg px-3 py-2 w-full" title="Filter by language">
+              <option>All Languages</option>
+              <option>Arabic</option>
+              <option>English</option>
+              <option>Kurdish</option>
+            </select>
+          </div>
+          <div>
+            <label for="filterFee" class="sr-only">Fee Range</label>
+            <select id="filterFee" class="border border-gray-300 rounded-lg px-3 py-2 w-full" title="Filter by fee range">
+              <option>Fee Range</option>
+              <option>$20-40</option>
+              <option>$40-80</option>
+              <option>$80+</option>
+            </select>
+          </div>
+          <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Filter</button>
+        </div>
+      </div>
+
+      <!-- Doctor Cards -->
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6" id="doctorCards"></div>
+    </section>
+
+    <!-- Register Page -->
+    <section id="registerPage" class="hidden fade-in">
+      <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-900" data-i18n="auth.register">Create Your Account</h2>
+          <p class="text-gray-600 mt-2" data-i18n="auth.registerDesc">Join MindCare to start your mental health journey</p>
+        </div>
+        <form id="registerForm">
+          <div class="space-y-4">
+            <div>
+              <label for="regFullName" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="auth.fullName">Full Name</label>
+              <input id="regFullName" name="fullName" type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="regEmail" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="auth.email">Email</label>
+              <input id="regEmail" name="email" type="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="regPhone" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="auth.phone">Phone Number</label>
+              <input id="regPhone" name="phone" type="tel" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="regDob" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="auth.dateOfBirth">Date of Birth</label>
+              <input id="regDob" name="dob" type="date" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="regPassword" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="auth.password">Password</label>
+              <input id="regPassword" name="password" type="password" minlength="6" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium mt-6" data-i18n="auth.createAccount">Create Account</button>
+        </form>
+        <div class="text-center mt-4">
+          <button data-nav="login" class="text-blue-600 hover:text-blue-800" data-i18n="auth.alreadyHaveAccount">Already have an account? Sign in</button>
+        </div>
+        <button data-nav="home" class="text-gray-500 hover:text-gray-700 mt-4 w-full" data-i18n="common.back">← Back to Home</button>
+      </div>
+    </section>
+
+    <!-- Login Page -->
+    <section id="loginPage" class="hidden fade-in">
+      <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-900" data-i18n="auth.login">Welcome Back</h2>
+          <p class="text-gray-600 mt-2" data-i18n="auth.loginDesc">Sign in to your MindCare account</p>
+        </div>
+        <form id="loginForm">
+          <div class="space-y-4">
+            <div>
+              <label for="loginEmail" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="auth.email">Email</label>
+              <input id="loginEmail" name="email" type="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+            <div>
+              <label for="loginPassword" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="auth.password">Password</label>
+              <input id="loginPassword" name="password" type="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+            </div>
+          </div>
+          <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium mt-6" data-i18n="auth.signIn">Sign In</button>
+        </form>
+        <div class="text-center mt-4">
+          <button data-nav="register" class="text-blue-600 hover:text-blue-800" data-i18n="auth.dontHaveAccount">Don't have an account? Sign up</button>
+        </div>
+        <button data-nav="home" class="text-gray-500 hover:text-gray-700 mt-4 w-full" data-i18n="common.back">← Back to Home</button>
+      </div>
+    </section>
+
+    <!-- Doctor Registration Page -->
+    <section id="doctorRegisterPage" class="hidden fade-in">
+      <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-900">Join as Doctor</h2>
+          <p class="text-gray-600 mt-2">Register your medical practice on MindCare</p>
+        </div>
+
+        <form id="doctorRegisterForm">
+          <div class="space-y-4">
+            <!-- Personal Info -->
+            <div class="border-b pb-4">
+              <h3 class="font-semibold text-gray-900 mb-4">Personal Information</h3>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label for="docFullName" class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                  <input id="docFullName" name="fullName" type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="docEmail" class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                  <input id="docEmail" name="email" type="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="docPhone" class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                  <input id="docPhone" name="phone" type="tel" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="docPassword" class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                  <input id="docPassword" name="password" type="password" minlength="6" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Professional Info -->
+            <div class="border-b pb-4">
+              <h3 class="font-semibold text-gray-900 mb-4">Professional Information</h3>
+              <div class="grid md:grid-cols-2 gap-4">
+                <div>
+                  <label for="docSpec" class="block text-sm font-medium text-gray-700 mb-1">Specialization</label>
+                  <select id="docSpec" name="specialization" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <option value="">Select specialization</option>
+                    <option value="Psychiatrist">Psychiatrist</option>
+                    <option value="Psychologist">Psychologist</option>
+                    <option value="Counselor">Counselor</option>
+                    <option value="Therapist">Therapist</option>
+                  </select>
+                </div>
+                <div>
+                  <label for="docExp" class="block text-sm font-medium text-gray-700 mb-1">Years of Experience</label>
+                  <input id="docExp" name="yearsExp" type="number" min="0" max="70" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="docRate" class="block text-sm font-medium text-gray-700 mb-1">Session Rate ($)</label>
+                  <input id="docRate" name="rate" type="number" min="10" step="5" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+                <div>
+                  <label for="docLang" class="block text-sm font-medium text-gray-700 mb-1">Languages (comma-separated)</label>
+                  <input id="docLang" name="languages" type="text" placeholder="Arabic, English, Kurdish" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                </div>
+              </div>
+            </div>
+
+            <!-- Bio -->
+            <div>
+              <label for="docBio" class="block text-sm font-medium text-gray-700 mb-1">Professional Bio</label>
+              <textarea id="docBio" name="bio" rows="4" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Tell patients about your expertise and approach..."></textarea>
+            </div>
+
+            <!-- License Info -->
+            <div>
+              <label for="docLicense" class="block text-sm font-medium text-gray-700 mb-1">License Number</label>
+              <input id="docLicense" name="license" type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Your medical license number" />
+            </div>
+          </div>
+
+          <div class="flex space-x-4 mt-8">
+            <button type="button" data-nav="home" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50">Back</button>
+            <button type="submit" class="flex-1 bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg font-medium">Register as Doctor</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Booking Page -->
+    <section id="bookingPage" class="hidden fade-in">
+      <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+        <div class="text-center mb-6">
+          <h2 class="text-2xl font-bold text-gray-900" data-i18n="booking.title">Book Appointment</h2>
+          <p class="text-gray-600 mt-2" id="selectedDoctor">with —</p>
+        </div>
+
+        <form id="bookingForm">
+          <div class="space-y-6">
+            <!-- Session Type -->
+            <div>
+              <label class="block text-sm font-medium text-gray-700 mb-3" data-i18n="booking.sessionType">Session Type</label>
+              <div class="grid grid-cols-3 gap-4">
+                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
+                  <input type="radio" name="sessionType" value="video" class="mr-3" checked />
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">📹</div>
+                    <div class="font-medium" data-i18n="booking.videoCall">Video Call</div>
+                    <div class="text-sm text-gray-500">Face-to-face</div>
+                  </div>
+                </label>
+                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
+                  <input type="radio" name="sessionType" value="audio" class="mr-3" />
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">🎧</div>
+                    <div class="font-medium" data-i18n="booking.audioCall">Audio Call</div>
+                    <div class="text-sm text-gray-500">Voice only</div>
+                  </div>
+                </label>
+                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
+                  <input type="radio" name="sessionType" value="text" class="mr-3" />
+                  <div class="text-center">
+                    <div class="text-2xl mb-1">💬</div>
+                    <div class="font-medium" data-i18n="booking.textChat">Text Chat</div>
+                    <div class="text-sm text-gray-500">Messaging</div>
+                  </div>
+                </label>
+              </div>
+            </div>
+
+            <!-- Date & Time -->
+            <div class="grid md:grid-cols-2 gap-4">
+              <div>
+                <label for="bookDate" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="booking.preferredDate">Preferred Date</label>
+                <input id="bookDate" name="date" type="date" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+              </div>
+              <div>
+                <label for="bookTime" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="booking.preferredTime">Preferred Time</label>
+                <select id="bookTime" name="time" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" title="Select appointment time">
+                  <option value="">Select time</option>
+                  <option value="09:00">9:00 AM</option>
+                  <option value="10:00">10:00 AM</option>
+                  <option value="11:00">11:00 AM</option>
+                  <option value="14:00">2:00 PM</option>
+                  <option value="15:00">3:00 PM</option>
+                  <option value="16:00">4:00 PM</option>
+                </select>
+              </div>
+            </div>
+
+            <div>
+              <label for="bookReason" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="booking.reasonForVisit">Reason for Visit</label>
+              <textarea id="bookReason" name="reason" rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Brief description of what you'd like to discuss..."></textarea>
+            </div>
+
+            <div>
+              <label for="bookEmergency" class="block text-sm font-medium text-gray-700 mb-1" data-i18n="booking.emergencyContact">Emergency Contact</label>
+              <input id="bookEmergency" name="emergency" type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Name and phone number" />
+            </div>
+          </div>
+
+          <div class="flex space-x-4 mt-8">
+            <button type="button" data-nav="doctors" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50" data-i18n="common.back">Back</button>
+            <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium" data-i18n="booking.confirmBooking">Confirm Booking</button>
+          </div>
+        </form>
+      </div>
+    </section>
+
+    <!-- Dashboard Page -->
+    <section id="dashboardPage" class="hidden fade-in">
+      <div class="flex justify-between items-center mb-8">
+        <h2 class="text-3xl font-bold text-gray-900" data-i18n="dashboard.title">Your Dashboard</h2>
+      </div>
+
+      <!-- Quick Stats -->
+      <div class="grid md:grid-cols-4 gap-6 mb-8" id="quickStats">
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">📅</div>
+            <div class="ml-4">
+              <p id="statUpcoming" class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-sm text-gray-600" data-i18n="dashboard.upcoming">Upcoming</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">✅</div>
+            <div class="ml-4">
+              <p id="statCompleted" class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-sm text-gray-600" data-i18n="dashboard.completed">Completed</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">💊</div>
+            <div class="ml-4">
+              <p id="statPrescriptions" class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-sm text-gray-600" data-i18n="dashboard.prescriptions">Prescriptions</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">🔔</div>
+            <div class="ml-4">
+              <p id="statReminders" class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-sm text-gray-600" data-i18n="dashboard.reminders">Reminders</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming Appointments -->
+      <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+        <h3 class="text-xl font-semibold mb-4" data-i18n="dashboard.upcomingAppointments">Upcoming Appointments</h3>
+        <div id="upcomingList" class="space-y-4">
+          <p class="text-gray-500">No upcoming appointments</p>
+        </div>
+      </div>
+
+      <!-- Quick Actions -->
+      <div class="grid md:grid-cols-2 gap-6">
+        <button data-nav="doctors" class="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-xl text-left">
+          <div class="text-2xl mb-2">👨‍⚕️</div>
+          <h3 class="text-xl font-semibold mb-2" data-i18n="dashboard.bookNewAppointment">Book New Appointment</h3>
+          <p class="text-blue-100">Schedule with a mental health professional</p>
+        </button>
+        <button id="btnReminders" class="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-xl text-left">
+          <div class="text-2xl mb-2">🔔</div>
+          <h3 class="text-xl font-semibold mb-2" data-i18n="dashboard.manageReminders">Manage Reminders</h3>
+          <p class="text-purple-100">Set up appointment and medication reminders</p>
+        </button>
+      </div>
+    </section>
+
+    <!-- Doctor Dashboard Page -->
+    <section id="doctorDashboardPage" class="hidden fade-in">
+      <div class="flex justify-between items-center mb-6">
+        <h2 class="text-3xl font-bold text-gray-900">Doctor Dashboard</h2>
+        <span id="docVerifiedBadge" class="text-sm px-3 py-1 rounded-full bg-yellow-100 text-yellow-800">Pending Verification</span>
+      </div>
+
+      <!-- Stats -->
+      <div class="grid md:grid-cols-3 gap-6 mb-8">
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">⏳</div>
+            <div class="ml-4">
+              <p id="docStatPending" class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-sm text-gray-600">Pending Approval</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">✅</div>
+            <div class="ml-4">
+              <p id="docStatApproved" class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-sm text-gray-600">Approved</p>
+            </div>
+          </div>
+        </div>
+        <div class="bg-white p-6 rounded-xl shadow-lg">
+          <div class="flex items-center">
+            <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">📅</div>
+            <div class="ml-4">
+              <p id="docStatCompleted" class="text-2xl font-bold text-gray-900">0</p>
+              <p class="text-sm text-gray-600">Completed</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pending Appointments (awaiting doctor approval) -->
+      <div class="bg-white p-6 rounded-xl shadow mb-6">
+        <h3 class="text-lg font-semibold mb-4">Pending Appointments (Awaiting Your Approval)</h3>
+        <div id="doctorPendingList" class="space-y-4">
+          <p class="text-gray-500">No pending appointments</p>
+        </div>
+      </div>
+
+      <!-- Approved Appointments -->
+      <div class="bg-white p-6 rounded-xl shadow mb-6">
+        <h3 class="text-lg font-semibold mb-4">Approved Appointments</h3>
+        <div id="doctorApprovedList" class="space-y-4">
+          <p class="text-gray-500">No approved appointments</p>
+        </div>
+      </div>
+
+      <!-- Completed Appointments -->
+      <div class="bg-white p-6 rounded-xl shadow">
+        <h3 class="text-lg font-semibold mb-4">Completed Appointments</h3>
+        <div id="doctorCompletedList" class="space-y-4">
+          <p class="text-gray-500">No completed appointments</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- Video Call Page -->
+    <section id="videoCallPage" class="hidden fade-in">
+      <div class="max-w-6xl mx-auto">
+        <div class="flex justify-between items-center mb-4">
+          <h2 class="text-2xl font-bold text-gray-900">Video Consultation</h2>
+          <div class="flex space-x-2">
+            <span id="callTimer" class="text-sm text-gray-600 px-3 py-2 bg-gray-100 rounded-lg">00:00</span>
+            <button onclick="endVideoCall()" class="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg font-medium">End Call</button>
+          </div>
+        </div>
+        <div id="jitsi-container" style="height: 600px; border-radius: 12px; overflow: hidden; box-shadow: 0 10px 25px rgba(0,0,0,0.1);"></div>
+        <div class="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+          <p class="text-sm text-blue-800">
+            <strong>Call in progress:</strong> You are connected with the doctor. The call will be recorded for quality assurance purposes.
+          </p>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Scripts -->
+  <script type="module" src="/js/firebase-init.js"></script>
+  <script type="module" src="/js/i18n.js"></script>
+  <script type="module" src="/js/seed-data.js"></script>
+  <script type="module" src="/js/app.js"></script>
+</body>
+</html>

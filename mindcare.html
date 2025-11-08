@@ -1,0 +1,824 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MindCare - Telemedicine Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            box-sizing: border-box;
+        }
+        .fade-in {
+            animation: fadeIn 0.3s ease-in;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .slide-in {
+            animation: slideIn 0.3s ease-out;
+        }
+        @keyframes slideIn {
+            from { transform: translateX(-100%); }
+            to { transform: translateX(0); }
+        }
+        .pulse-dot {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-blue-50 to-indigo-100 min-h-full">
+    <!-- Navigation -->
+    <nav class="bg-white shadow-lg">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between h-16">
+                <div class="flex items-center">
+                    <div class="flex-shrink-0 flex items-center">
+                        <div class="w-8 h-8 bg-gradient-to-r from-blue-600 to-indigo-600 rounded-lg flex items-center justify-center">
+                            <span class="text-white font-bold text-lg">M</span>
+                        </div>
+                        <span class="ml-2 text-xl font-bold text-gray-900">MindCare</span>
+                    </div>
+                </div>
+                <div class="flex items-center space-x-4">
+                    <button onclick="showLogin()" class="text-gray-700 hover:text-blue-600 px-3 py-2 rounded-md text-sm font-medium">Login</button>
+                    <button onclick="showRegister()" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium">Sign Up</button>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <!-- Home Page -->
+        <div id="homePage" class="fade-in">
+            <div class="text-center mb-12">
+                <h1 class="text-4xl font-bold text-gray-900 mb-4">Secure Mental Health Care, Anywhere</h1>
+                <p class="text-xl text-gray-600 mb-8">Connect with licensed psychiatrists, psychologists, and counselors through secure video, audio, or text sessions.</p>
+                <div class="flex justify-center space-x-4">
+                    <button onclick="showDoctors()" class="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg text-lg font-medium">Find a Doctor</button>
+                    <button onclick="showRegister()" class="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 px-8 py-3 rounded-lg text-lg font-medium">Join as Patient</button>
+                </div>
+            </div>
+
+            <!-- Features -->
+            <div class="grid md:grid-cols-3 gap-8 mb-12">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">🔒</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Secure Sessions</h3>
+                    <p class="text-gray-600">End-to-end encrypted video, audio, and text sessions for complete privacy.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">💊</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">E-Prescriptions</h3>
+                    <p class="text-gray-600">Licensed psychiatrists can prescribe medications digitally where legally permitted.</p>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-4">
+                        <span class="text-2xl">📅</span>
+                    </div>
+                    <h3 class="text-xl font-semibold mb-2">Smart Reminders</h3>
+                    <p class="text-gray-600">Automated follow-up scheduling and appointment reminders.</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Doctor Profiles -->
+        <div id="doctorsPage" class="hidden fade-in">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">Find Your Doctor</h2>
+                <button onclick="showHome()" class="text-blue-600 hover:text-blue-800">← Back to Home</button>
+            </div>
+
+            <!-- Filters -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <div class="grid md:grid-cols-4 gap-4">
+                    <select class="border border-gray-300 rounded-lg px-3 py-2">
+                        <option>All Specializations</option>
+                        <option>Psychiatrist</option>
+                        <option>Psychologist</option>
+                        <option>Counselor</option>
+                    </select>
+                    <select class="border border-gray-300 rounded-lg px-3 py-2">
+                        <option>All Languages</option>
+                        <option>English</option>
+                        <option>Spanish</option>
+                        <option>French</option>
+                    </select>
+                    <select class="border border-gray-300 rounded-lg px-3 py-2">
+                        <option>Fee Range</option>
+                        <option>$50-100</option>
+                        <option>$100-150</option>
+                        <option>$150+</option>
+                    </select>
+                    <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Filter</button>
+                </div>
+            </div>
+
+            <!-- Doctor Cards -->
+            <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-blue-200 rounded-full flex items-center justify-center">
+                            <span class="text-2xl">👨‍⚕️</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-semibold">Dr. Sarah Johnson</h3>
+                            <p class="text-blue-600 font-medium">Psychiatrist</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <p class="text-sm text-gray-600"><span class="font-medium">Languages:</span> English, Spanish</p>
+                        <p class="text-sm text-gray-600"><span class="font-medium">Experience:</span> 12 years</p>
+                        <p class="text-sm text-gray-600"><span class="font-medium">Specialties:</span> Anxiety, Depression</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-2xl font-bold text-green-600">$120/session</span>
+                        <button onclick="bookAppointment('Dr. Sarah Johnson')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Book Now</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-green-200 rounded-full flex items-center justify-center">
+                            <span class="text-2xl">👩‍⚕️</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-semibold">Dr. Michael Chen</h3>
+                            <p class="text-green-600 font-medium">Psychologist</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <p class="text-sm text-gray-600"><span class="font-medium">Languages:</span> English, Mandarin</p>
+                        <p class="text-sm text-gray-600"><span class="font-medium">Experience:</span> 8 years</p>
+                        <p class="text-sm text-gray-600"><span class="font-medium">Specialties:</span> CBT, Trauma</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-2xl font-bold text-green-600">$95/session</span>
+                        <button onclick="bookAppointment('Dr. Michael Chen')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Book Now</button>
+                    </div>
+                </div>
+
+                <div class="bg-white p-6 rounded-xl shadow-lg hover:shadow-xl transition-shadow">
+                    <div class="flex items-center mb-4">
+                        <div class="w-16 h-16 bg-purple-200 rounded-full flex items-center justify-center">
+                            <span class="text-2xl">👩‍💼</span>
+                        </div>
+                        <div class="ml-4">
+                            <h3 class="text-xl font-semibold">Lisa Rodriguez</h3>
+                            <p class="text-purple-600 font-medium">Licensed Counselor</p>
+                        </div>
+                    </div>
+                    <div class="space-y-2 mb-4">
+                        <p class="text-sm text-gray-600"><span class="font-medium">Languages:</span> English, Spanish, French</p>
+                        <p class="text-sm text-gray-600"><span class="font-medium">Experience:</span> 6 years</p>
+                        <p class="text-sm text-gray-600"><span class="font-medium">Specialties:</span> Relationships, Stress</p>
+                    </div>
+                    <div class="flex justify-between items-center">
+                        <span class="text-2xl font-bold text-green-600">$75/session</span>
+                        <button onclick="bookAppointment('Lisa Rodriguez')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Book Now</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Registration -->
+        <div id="registerPage" class="hidden fade-in">
+            <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Create Your Account</h2>
+                    <p class="text-gray-600 mt-2">Join MindCare to start your mental health journey</p>
+                </div>
+                <form onsubmit="handleRegister(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                            <input type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Phone Number</label>
+                            <input type="tel" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                            <input type="date" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium mt-6">Create Account</button>
+                </form>
+                <div class="text-center mt-4">
+                    <button onclick="showLogin()" class="text-blue-600 hover:text-blue-800">Already have an account? Sign in</button>
+                </div>
+                <button onclick="showHome()" class="text-gray-500 hover:text-gray-700 mt-4">← Back to Home</button>
+            </div>
+        </div>
+
+        <!-- Login -->
+        <div id="loginPage" class="hidden fade-in">
+            <div class="max-w-md mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Welcome Back</h2>
+                    <p class="text-gray-600 mt-2">Sign in to your MindCare account</p>
+                </div>
+                <form onsubmit="handleLogin(event)">
+                    <div class="space-y-4">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                            <input type="email" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                            <input type="password" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                        </div>
+                    </div>
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium mt-6">Sign In</button>
+                </form>
+                <div class="text-center mt-4">
+                    <button onclick="showRegister()" class="text-blue-600 hover:text-blue-800">Don't have an account? Sign up</button>
+                </div>
+                <button onclick="showHome()" class="text-gray-500 hover:text-gray-700 mt-4">← Back to Home</button>
+            </div>
+        </div>
+
+        <!-- Booking Page -->
+        <div id="bookingPage" class="hidden fade-in">
+            <div class="max-w-2xl mx-auto bg-white p-8 rounded-xl shadow-lg">
+                <div class="text-center mb-6">
+                    <h2 class="text-2xl font-bold text-gray-900">Book Appointment</h2>
+                    <p class="text-gray-600 mt-2" id="selectedDoctor">with Dr. Sarah Johnson</p>
+                </div>
+                
+                <form onsubmit="handleBooking(event)">
+                    <div class="space-y-6">
+                        <!-- Session Type -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-3">Session Type</label>
+                            <div class="grid grid-cols-3 gap-4">
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
+                                    <input type="radio" name="sessionType" value="video" class="mr-3" checked>
+                                    <div class="text-center">
+                                        <div class="text-2xl mb-1">📹</div>
+                                        <div class="font-medium">Video Call</div>
+                                        <div class="text-sm text-gray-500">Face-to-face</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
+                                    <input type="radio" name="sessionType" value="audio" class="mr-3">
+                                    <div class="text-center">
+                                        <div class="text-2xl mb-1">🎧</div>
+                                        <div class="font-medium">Audio Call</div>
+                                        <div class="text-sm text-gray-500">Voice only</div>
+                                    </div>
+                                </label>
+                                <label class="flex items-center p-4 border-2 border-gray-200 rounded-lg cursor-pointer hover:border-blue-300">
+                                    <input type="radio" name="sessionType" value="text" class="mr-3">
+                                    <div class="text-center">
+                                        <div class="text-2xl mb-1">💬</div>
+                                        <div class="font-medium">Text Chat</div>
+                                        <div class="text-sm text-gray-500">Messaging</div>
+                                    </div>
+                                </label>
+                            </div>
+                        </div>
+
+                        <!-- Date & Time -->
+                        <div class="grid md:grid-cols-2 gap-4">
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Date</label>
+                                <input type="date" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                            </div>
+                            <div>
+                                <label class="block text-sm font-medium text-gray-700 mb-1">Preferred Time</label>
+                                <select required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                    <option value="">Select time</option>
+                                    <option value="09:00">9:00 AM</option>
+                                    <option value="10:00">10:00 AM</option>
+                                    <option value="11:00">11:00 AM</option>
+                                    <option value="14:00">2:00 PM</option>
+                                    <option value="15:00">3:00 PM</option>
+                                    <option value="16:00">4:00 PM</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <!-- Reason -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Reason for Visit</label>
+                            <textarea rows="3" class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Brief description of what you'd like to discuss..."></textarea>
+                        </div>
+
+                        <!-- Emergency Contact -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">Emergency Contact</label>
+                            <input type="text" required class="w-full border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent" placeholder="Name and phone number">
+                        </div>
+                    </div>
+
+                    <div class="flex space-x-4 mt-8">
+                        <button type="button" onclick="showDoctors()" class="flex-1 border border-gray-300 text-gray-700 py-3 rounded-lg font-medium hover:bg-gray-50">Back</button>
+                        <button type="submit" class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-medium">Book Appointment</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboardPage" class="hidden fade-in">
+            <div class="flex justify-between items-center mb-8">
+                <h2 class="text-3xl font-bold text-gray-900">Your Dashboard</h2>
+                <button onclick="logout()" class="text-red-600 hover:text-red-800">Logout</button>
+            </div>
+
+            <!-- Quick Stats -->
+            <div class="grid md:grid-cols-4 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">📅</span>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-2xl font-bold text-gray-900">3</p>
+                            <p class="text-sm text-gray-600">Upcoming</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">✅</span>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-2xl font-bold text-gray-900">12</p>
+                            <p class="text-sm text-gray-600">Completed</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">💊</span>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-2xl font-bold text-gray-900">2</p>
+                            <p class="text-sm text-gray-600">Prescriptions</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-white p-6 rounded-xl shadow-lg">
+                    <div class="flex items-center">
+                        <div class="w-12 h-12 bg-yellow-100 rounded-lg flex items-center justify-center">
+                            <span class="text-2xl">🔔</span>
+                        </div>
+                        <div class="ml-4">
+                            <p class="text-2xl font-bold text-gray-900">1</p>
+                            <p class="text-sm text-gray-600">Reminders</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Upcoming Appointments -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 class="text-xl font-semibold mb-4">Upcoming Appointments</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-blue-200 rounded-full flex items-center justify-center">
+                                <span class="text-xl">👨‍⚕️</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-semibold">Dr. Sarah Johnson</p>
+                                <p class="text-sm text-gray-600">Video Session • Dec 15, 2024 at 2:00 PM</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="joinSession('video')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">Join Session</button>
+                            <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Reschedule</button>
+                        </div>
+                    </div>
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="w-12 h-12 bg-green-200 rounded-full flex items-center justify-center">
+                                <span class="text-xl">👩‍⚕️</span>
+                            </div>
+                            <div class="ml-4">
+                                <p class="font-semibold">Dr. Michael Chen</p>
+                                <p class="text-sm text-gray-600">Audio Session • Dec 18, 2024 at 10:00 AM</p>
+                            </div>
+                        </div>
+                        <div class="flex space-x-2">
+                            <button onclick="joinSession('audio')" class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm">Join Session</button>
+                            <button class="border border-gray-300 text-gray-700 px-4 py-2 rounded-lg text-sm hover:bg-gray-50">Reschedule</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Prescriptions -->
+            <div class="bg-white p-6 rounded-xl shadow-lg mb-8">
+                <h3 class="text-xl font-semibold mb-4">Active Prescriptions</h3>
+                <div class="space-y-4">
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                            <p class="font-semibold">Sertraline 50mg</p>
+                            <p class="text-sm text-gray-600">Prescribed by Dr. Sarah Johnson • Take once daily</p>
+                            <p class="text-sm text-green-600">Ready for pickup at CVS Pharmacy</p>
+                        </div>
+                        <button onclick="viewPrescription('Sertraline')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">View Details</button>
+                    </div>
+                    <div class="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                        <div>
+                            <p class="font-semibold">Lorazepam 0.5mg</p>
+                            <p class="text-sm text-gray-600">Prescribed by Dr. Sarah Johnson • As needed for anxiety</p>
+                            <p class="text-sm text-yellow-600">Pending pharmacy approval</p>
+                        </div>
+                        <button onclick="viewPrescription('Lorazepam')" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">View Details</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Quick Actions -->
+            <div class="grid md:grid-cols-2 gap-6">
+                <button onclick="showDoctors()" class="bg-blue-600 hover:bg-blue-700 text-white p-6 rounded-xl text-left">
+                    <div class="text-2xl mb-2">👨‍⚕️</div>
+                    <h3 class="text-xl font-semibold mb-2">Book New Appointment</h3>
+                    <p class="text-blue-100">Schedule with a mental health professional</p>
+                </button>
+                <button onclick="showReminders()" class="bg-purple-600 hover:bg-purple-700 text-white p-6 rounded-xl text-left">
+                    <div class="text-2xl mb-2">🔔</div>
+                    <h3 class="text-xl font-semibold mb-2">Manage Reminders</h3>
+                    <p class="text-purple-100">Set up appointment and medication reminders</p>
+                </button>
+            </div>
+        </div>
+
+        <!-- Session Page -->
+        <div id="sessionPage" class="hidden fade-in">
+            <div class="max-w-4xl mx-auto">
+                <div class="bg-white rounded-xl shadow-lg overflow-hidden">
+                    <!-- Session Header -->
+                    <div class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-6">
+                        <div class="flex justify-between items-center">
+                            <div>
+                                <h2 class="text-2xl font-bold">Session with Dr. Sarah Johnson</h2>
+                                <p class="text-blue-100">Secure Video Call • Session ID: #12345</p>
+                            </div>
+                            <div class="flex items-center space-x-2">
+                                <div class="w-3 h-3 bg-green-400 rounded-full pulse-dot"></div>
+                                <span class="text-sm">Encrypted</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Video Area -->
+                    <div id="videoSession" class="relative bg-gray-900 aspect-video">
+                        <div class="absolute inset-0 flex items-center justify-center">
+                            <div class="text-center text-white">
+                                <div class="w-32 h-32 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-4">
+                                    <span class="text-4xl">👨‍⚕️</span>
+                                </div>
+                                <p class="text-xl font-semibold">Dr. Sarah Johnson</p>
+                                <p class="text-gray-300">Connecting to secure session...</p>
+                            </div>
+                        </div>
+                        <!-- Patient video (small) -->
+                        <div class="absolute bottom-4 right-4 w-32 h-24 bg-gray-800 rounded-lg border-2 border-white">
+                            <div class="w-full h-full flex items-center justify-center text-white">
+                                <span class="text-2xl">👤</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Audio Session -->
+                    <div id="audioSession" class="hidden bg-gradient-to-br from-purple-600 to-indigo-600 aspect-video flex items-center justify-center">
+                        <div class="text-center text-white">
+                            <div class="w-32 h-32 bg-white bg-opacity-20 rounded-full flex items-center justify-center mx-auto mb-4">
+                                <span class="text-4xl">🎧</span>
+                            </div>
+                            <p class="text-2xl font-semibold mb-2">Audio Session Active</p>
+                            <p class="text-purple-100">Connected to Dr. Sarah Johnson</p>
+                            <div class="flex justify-center mt-4">
+                                <div class="flex space-x-1">
+                                    <div class="w-2 h-8 bg-white bg-opacity-60 rounded animate-pulse"></div>
+                                    <div class="w-2 h-12 bg-white bg-opacity-80 rounded animate-pulse" style="animation-delay: 0.1s"></div>
+                                    <div class="w-2 h-6 bg-white bg-opacity-60 rounded animate-pulse" style="animation-delay: 0.2s"></div>
+                                    <div class="w-2 h-10 bg-white bg-opacity-70 rounded animate-pulse" style="animation-delay: 0.3s"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Text Session -->
+                    <div id="textSession" class="hidden">
+                        <div class="h-96 p-6 overflow-y-auto bg-gray-50">
+                            <div class="space-y-4">
+                                <div class="flex">
+                                    <div class="bg-blue-600 text-white p-3 rounded-lg max-w-xs">
+                                        <p class="text-sm">Hello! I'm Dr. Johnson. How are you feeling today?</p>
+                                        <span class="text-xs text-blue-200">2:00 PM</span>
+                                    </div>
+                                </div>
+                                <div class="flex justify-end">
+                                    <div class="bg-gray-300 text-gray-800 p-3 rounded-lg max-w-xs">
+                                        <p class="text-sm">Hi Dr. Johnson, I've been feeling quite anxious lately.</p>
+                                        <span class="text-xs text-gray-600">2:01 PM</span>
+                                    </div>
+                                </div>
+                                <div class="flex">
+                                    <div class="bg-blue-600 text-white p-3 rounded-lg max-w-xs">
+                                        <p class="text-sm">I understand. Can you tell me more about what's been triggering your anxiety?</p>
+                                        <span class="text-xs text-blue-200">2:02 PM</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="p-4 border-t">
+                            <div class="flex space-x-2">
+                                <input type="text" placeholder="Type your message..." class="flex-1 border border-gray-300 rounded-lg px-3 py-2 focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                                <button class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg">Send</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Session Controls -->
+                    <div class="bg-gray-100 p-6">
+                        <div class="flex justify-center space-x-4">
+                            <button id="muteBtn" onclick="toggleMute()" class="bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-full">
+                                <span class="text-xl">🎤</span>
+                            </button>
+                            <button id="videoBtn" onclick="toggleVideo()" class="bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-full">
+                                <span class="text-xl">📹</span>
+                            </button>
+                            <button onclick="endSession()" class="bg-red-600 hover:bg-red-700 text-white px-6 py-3 rounded-full font-medium">
+                                End Session
+                            </button>
+                            <button onclick="shareScreen()" class="bg-blue-600 hover:bg-blue-700 text-white p-3 rounded-full">
+                                <span class="text-xl">🖥️</span>
+                            </button>
+                        </div>
+                        <div class="text-center mt-4">
+                            <p class="text-sm text-gray-600">Session Duration: <span id="sessionTimer">00:15:32</span></p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Prescription Details Modal -->
+        <div id="prescriptionModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+            <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full mx-4">
+                <div class="text-center mb-6">
+                    <h3 class="text-2xl font-bold text-gray-900">Prescription Details</h3>
+                </div>
+                <div id="prescriptionContent" class="space-y-4">
+                    <!-- Content will be populated by JavaScript -->
+                </div>
+                <div class="flex space-x-4 mt-6">
+                    <button onclick="closePrescriptionModal()" class="flex-1 border border-gray-300 text-gray-700 py-2 rounded-lg hover:bg-gray-50">Close</button>
+                    <button class="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg">Download PDF</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Global state
+        let currentUser = null;
+        let currentPage = 'home';
+        let selectedDoctor = '';
+        let isMuted = false;
+        let isVideoOn = true;
+        let sessionStartTime = null;
+
+        // Navigation functions
+        function showHome() {
+            hideAllPages();
+            document.getElementById('homePage').classList.remove('hidden');
+            currentPage = 'home';
+        }
+
+        function showDoctors() {
+            hideAllPages();
+            document.getElementById('doctorsPage').classList.remove('hidden');
+            currentPage = 'doctors';
+        }
+
+        function showRegister() {
+            hideAllPages();
+            document.getElementById('registerPage').classList.remove('hidden');
+            currentPage = 'register';
+        }
+
+        function showLogin() {
+            hideAllPages();
+            document.getElementById('loginPage').classList.remove('hidden');
+            currentPage = 'login';
+        }
+
+        function showDashboard() {
+            hideAllPages();
+            document.getElementById('dashboardPage').classList.remove('hidden');
+            currentPage = 'dashboard';
+        }
+
+        function showBooking() {
+            hideAllPages();
+            document.getElementById('bookingPage').classList.remove('hidden');
+            currentPage = 'booking';
+        }
+
+        function hideAllPages() {
+            const pages = ['homePage', 'doctorsPage', 'registerPage', 'loginPage', 'dashboardPage', 'bookingPage', 'sessionPage'];
+            pages.forEach(page => {
+                document.getElementById(page).classList.add('hidden');
+            });
+        }
+
+        // Authentication functions
+        function handleRegister(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            
+            // Simulate registration
+            currentUser = {
+                name: formData.get('name') || 'John Doe',
+                email: formData.get('email') || 'john@example.com'
+            };
+            
+            alert('Registration successful! Welcome to MindCare.');
+            showDashboard();
+        }
+
+        function handleLogin(event) {
+            event.preventDefault();
+            
+            // Simulate login
+            currentUser = {
+                name: 'John Doe',
+                email: 'john@example.com'
+            };
+            
+            alert('Login successful! Welcome back.');
+            showDashboard();
+        }
+
+        function logout() {
+            currentUser = null;
+            showHome();
+            alert('You have been logged out successfully.');
+        }
+
+        // Booking functions
+        function bookAppointment(doctorName) {
+            selectedDoctor = doctorName;
+            document.getElementById('selectedDoctor').textContent = `with ${doctorName}`;
+            showBooking();
+        }
+
+        function handleBooking(event) {
+            event.preventDefault();
+            const formData = new FormData(event.target);
+            const sessionType = formData.get('sessionType');
+            const date = formData.get('date');
+            const time = formData.get('time');
+            
+            alert(`Appointment booked successfully!\n\nDoctor: ${selectedDoctor}\nType: ${sessionType}\nDate: ${date}\nTime: ${time}\n\nYou will receive a confirmation email shortly.`);
+            showDashboard();
+        }
+
+        // Session functions
+        function joinSession(type) {
+            hideAllPages();
+            document.getElementById('sessionPage').classList.remove('hidden');
+            
+            // Show appropriate session type
+            document.getElementById('videoSession').classList.toggle('hidden', type !== 'video');
+            document.getElementById('audioSession').classList.toggle('hidden', type !== 'audio');
+            document.getElementById('textSession').classList.toggle('hidden', type !== 'text');
+            
+            // Start session timer
+            sessionStartTime = new Date();
+            startSessionTimer();
+            
+            // Simulate connection
+            setTimeout(() => {
+                alert(`Connected to secure ${type} session with Dr. Sarah Johnson`);
+            }, 2000);
+        }
+
+        function startSessionTimer() {
+            setInterval(() => {
+                if (sessionStartTime) {
+                    const elapsed = new Date() - sessionStartTime;
+                    const minutes = Math.floor(elapsed / 60000);
+                    const seconds = Math.floor((elapsed % 60000) / 1000);
+                    document.getElementById('sessionTimer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
+        }
+
+        function toggleMute() {
+            isMuted = !isMuted;
+            const btn = document.getElementById('muteBtn');
+            btn.innerHTML = isMuted ? '<span class="text-xl">🔇</span>' : '<span class="text-xl">🎤</span>';
+            btn.className = isMuted ? 'bg-red-600 hover:bg-red-700 text-white p-3 rounded-full' : 'bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-full';
+        }
+
+        function toggleVideo() {
+            isVideoOn = !isVideoOn;
+            const btn = document.getElementById('videoBtn');
+            btn.innerHTML = isVideoOn ? '<span class="text-xl">📹</span>' : '<span class="text-xl">📵</span>';
+            btn.className = isVideoOn ? 'bg-gray-600 hover:bg-gray-700 text-white p-3 rounded-full' : 'bg-red-600 hover:bg-red-700 text-white p-3 rounded-full';
+        }
+
+        function shareScreen() {
+            alert('Screen sharing initiated. Your screen is now being shared securely with Dr. Sarah Johnson.');
+        }
+
+        function endSession() {
+            if (confirm('Are you sure you want to end this session?')) {
+                sessionStartTime = null;
+                alert('Session ended. Thank you for using MindCare. Your session notes will be available in your dashboard.');
+                showDashboard();
+            }
+        }
+
+        // Prescription functions
+        function viewPrescription(medication) {
+            const modal = document.getElementById('prescriptionModal');
+            const content = document.getElementById('prescriptionContent');
+            
+            let prescriptionData = {};
+            if (medication === 'Sertraline') {
+                prescriptionData = {
+                    medication: 'Sertraline 50mg',
+                    doctor: 'Dr. Sarah Johnson',
+                    date: 'December 10, 2024',
+                    instructions: 'Take one tablet daily with food',
+                    quantity: '30 tablets',
+                    refills: '2 refills remaining',
+                    pharmacy: 'CVS Pharmacy - Main St',
+                    status: 'Ready for pickup'
+                };
+            } else {
+                prescriptionData = {
+                    medication: 'Lorazepam 0.5mg',
+                    doctor: 'Dr. Sarah Johnson',
+                    date: 'December 12, 2024',
+                    instructions: 'Take as needed for anxiety, maximum 3 times daily',
+                    quantity: '15 tablets',
+                    refills: '0 refills',
+                    pharmacy: 'CVS Pharmacy - Main St',
+                    status: 'Pending pharmacy approval'
+                };
+            }
+            
+            content.innerHTML = `
+                <div class="space-y-3">
+                    <div><span class="font-medium">Medication:</span> ${prescriptionData.medication}</div>
+                    <div><span class="font-medium">Prescribed by:</span> ${prescriptionData.doctor}</div>
+                    <div><span class="font-medium">Date:</span> ${prescriptionData.date}</div>
+                    <div><span class="font-medium">Instructions:</span> ${prescriptionData.instructions}</div>
+                    <div><span class="font-medium">Quantity:</span> ${prescriptionData.quantity}</div>
+                    <div><span class="font-medium">Refills:</span> ${prescriptionData.refills}</div>
+                    <div><span class="font-medium">Pharmacy:</span> ${prescriptionData.pharmacy}</div>
+                    <div><span class="font-medium">Status:</span> <span class="text-green-600">${prescriptionData.status}</span></div>
+                </div>
+            `;
+            
+            modal.classList.remove('hidden');
+        }
+
+        function closePrescriptionModal() {
+            document.getElementById('prescriptionModal').classList.add('hidden');
+        }
+
+        function showReminders() {
+            alert('Reminder Management:\n\n✅ Appointment with Dr. Johnson - Dec 15 at 1:30 PM\n✅ Take Sertraline - Daily at 8:00 AM\n✅ Follow-up booking reminder - Dec 20\n\nAll reminders are active and will be sent via email and SMS.');
+        }
+
+        // Initialize the app
+        document.addEventListener('DOMContentLoaded', function() {
+            showHome();
+        });
+    </script>
+<script>(function(){function c(){var b=a.contentDocument||a.contentWindow.document;if(b){var d=b.createElement('script');d.innerHTML="window.__CF$cv$params={r:'98d836bd56403a71',t:'MTc2MDI4OTA1OS4wMDAwMDA='};var a=document.createElement('script');a.nonce='';a.src='/cdn-cgi/challenge-platform/scripts/jsd/main.js';document.getElementsByTagName('head')[0].appendChild(a);";b.getElementsByTagName('head')[0].appendChild(d)}}if(document.body){var a=document.createElement('iframe');a.height=1;a.width=1;a.style.position='absolute';a.style.top=0;a.style.left=0;a.style.border='none';a.style.visibility='hidden';document.body.appendChild(a);if('loading'!==document.readyState)c();else if(window.addEventListener)document.addEventListener('DOMContentLoaded',c);else{var e=document.onreadystatechange||function(){};document.onreadystatechange=function(b){e(b);'loading'!==document.readyState&&(document.onreadystatechange=e,c())}}}})();</script></body>
+</html>

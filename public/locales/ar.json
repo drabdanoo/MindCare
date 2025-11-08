@@ -1,0 +1,92 @@
+{
+  "common": {
+    "appName": "مايند كير",
+    "tagline": "الرعاية الصحية النفسية الآمنة في أي مكان",
+    "login": "تسجيل الدخول",
+    "signup": "إنشاء حساب",
+    "logout": "تسجيل الخروج",
+    "back": "رجوع",
+    "next": "التالي",
+    "cancel": "إلغاء",
+    "submit": "إرسال",
+    "save": "حفظ",
+    "delete": "حذف",
+    "edit": "تعديل",
+    "loading": "جاري التحميل...",
+    "error": "خطأ",
+    "success": "نجح"
+  },
+  "nav": {
+    "home": "الرئيسية",
+    "findDoctor": "ابحث عن طبيب",
+    "joinPatient": "انضم كمريض",
+    "doctorDashboard": "لوحة تحكم الطبيب",
+    "dashboard": "لوحة التحكم"
+  },
+  "home": {
+    "title": "الرعاية الصحية النفسية الآمنة في أي مكان",
+    "subtitle": "تواصل مع الأطباء النفسيين والمعالجين المرخصين من خلال جلسات فيديو وصوت ونصية آمنة.",
+    "cta1": "ابحث عن طبيب",
+    "cta2": "انضم كمريض",
+    "feature1Title": "جلسات آمنة",
+    "feature1Desc": "جلسات فيديو وصوت ونصية مشفرة من طرف إلى طرف لضمان الخصوصية التامة.",
+    "feature2Title": "الوصفات الإلكترونية",
+    "feature2Desc": "يمكن للأطباء النفسيين المرخصين وصف الأدوية رقمياً حيث يسمح القانون.",
+    "feature3Title": "تذكيرات ذكية",
+    "feature3Desc": "جدولة متابعة تلقائية وتذكيرات بالمواعيد."
+  },
+  "doctors": {
+    "title": "ابحث عن طبيبك",
+    "filterSpecialization": "جميع التخصصات",
+    "filterLanguage": "جميع اللغات",
+    "filterFeeRange": "نطاق الأسعار",
+    "psychiatrist": "طبيب نفسي",
+    "psychologist": "عالم نفس",
+    "counselor": "مستشار",
+    "arabic": "العربية",
+    "english": "الإنجليزية",
+    "kurdish": "الكردية",
+    "yearsExp": "سنوات الخبرة",
+    "ratePerSession": "السعر لكل جلسة",
+    "bookNow": "احجز الآن"
+  },
+  "booking": {
+    "title": "احجز موعداً",
+    "sessionType": "نوع الجلسة",
+    "videoCall": "مكالمة فيديو",
+    "audioCall": "مكالمة صوتية",
+    "textChat": "دردشة نصية",
+    "preferredDate": "التاريخ المفضل",
+    "preferredTime": "الوقت المفضل",
+    "reasonForVisit": "سبب الزيارة",
+    "emergencyContact": "جهة الاتصال في الطوارئ",
+    "confirmBooking": "تأكيد الحجز"
+  },
+  "auth": {
+    "register": "إنشاء حسابك",
+    "registerDesc": "انضم إلى مايند كير لبدء رحلتك الصحية النفسية",
+    "fullName": "الاسم الكامل",
+    "email": "البريد الإلكتروني",
+    "phone": "رقم الهاتف",
+    "dateOfBirth": "تاريخ الميلاد",
+    "password": "كلمة المرور",
+    "confirmPassword": "تأكيد كلمة المرور",
+    "createAccount": "إنشاء حساب",
+    "alreadyHaveAccount": "هل لديك حساب بالفعل؟ تسجيل الدخول",
+    "login": "أهلا بعودتك",
+    "loginDesc": "تسجيل الدخول إلى حسابك في مايند كير",
+    "signIn": "تسجيل الدخول",
+    "dontHaveAccount": "ليس لديك حساب؟ إنشاء حساب",
+    "forgotPassword": "هل نسيت كلمة المرور؟"
+  },
+  "dashboard": {
+    "title": "لوحة التحكم الخاصة بك",
+    "upcoming": "القادمة",
+    "completed": "المكتملة",
+    "prescriptions": "الوصفات",
+    "reminders": "التذكيرات",
+    "upcomingAppointments": "المواعيد القادمة",
+    "bookNewAppointment": "احجز موعداً جديداً",
+    "manageReminders": "إدارة التذكيرات"
+  }
+}
