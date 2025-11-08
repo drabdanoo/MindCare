@@ -34,11 +34,11 @@ if (missingConfigs.length > 0) {
 }
 
 if (isWeb && (!apiKey || !appId)) {
-  // Provide a friendly error for web when no web credentials are configured
-  // This avoids the cryptic Firebase auth/invalid-api-key error.
-  // Either add WEB keys to .env or run the Android app instead of web.
-  // Web credentials missing: Set EXPO_PUBLIC_FIREBASE_API_KEY_WEB and EXPO_PUBLIC_FIREBASE_APP_ID_WEB in .env
+  throw new Error(
+    'Firebase web credentials are missing. Please set EXPO_PUBLIC_FIREBASE_API_KEY_WEB and EXPO_PUBLIC_FIREBASE_APP_ID_WEB in your .env, then restart the Expo server. Alternatively, run the Android app which uses Android Firebase keys.'
+  );
 }
+
 
 // Only initialize Firebase if we have the basic required configuration
 const firebaseConfig = {
