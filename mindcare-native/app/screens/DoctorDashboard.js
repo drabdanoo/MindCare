@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  TextInput,
 } from 'react-native';
-import { collection, query, where, onSnapshot, updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 
@@ -19,7 +20,17 @@ export default function DoctorDashboard({ navigation }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'appointments'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'appointments', or 'profile'
+  const [doctorProfile, setDoctorProfile] = useState({
+    specialty: '',
+    consultationFee: '',
+    availability: {
+      startTime: '09:00',
+      endTime: '17:00',
+      days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+    }
+  });
+  const [profileLoading, setProfileLoading] = useState(false);
 
   useEffect(() => {
     // Check if Firebase is initialized
@@ -66,6 +77,9 @@ export default function DoctorDashboard({ navigation }) {
           setLoading(false);
         }
       );
+      
+      // Load doctor profile
+      loadDoctorProfile();
     } catch (err) {
       console.error('Error setting up listener:', err);
       setError('Failed to set up appointments listener: ' + err.message);
@@ -78,6 +92,30 @@ export default function DoctorDashboard({ navigation }) {
       }
     };
   }, []);
+
+  const loadDoctorProfile = async () => {
+    try {
+      setProfileLoading(true);
+      const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+      if (userDoc.exists()) {
+        const userData = userDoc.data();
+        setDoctorProfile({
+          specialty: userData.specialty || '',
+          consultationFee: userData.consultationFee || '',
+          availability: userData.availability || {
+            startTime: '09:00',
+            endTime: '17:00',
+            days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
+          }
+        });
+      }
+    } catch (err) {
+      console.error('Error loading doctor profile:', err);
+      Alert.alert('Error', 'Failed to load profile information');
+    } finally {
+      setProfileLoading(false);
+    }
+  };
 
   const handleLogout = async () => {
     // Check if Firebase Auth is initialized
@@ -109,6 +147,24 @@ export default function DoctorDashboard({ navigation }) {
     } catch (error) {
       console.error('Error updating appointment:', error);
       Alert.alert('Error', `Failed to ${status} appointment: ${error.message}`);
+    }
+  };
+
+  const saveDoctorProfile = async () => {
+    try {
+      setProfileLoading(true);
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+        specialty: doctorProfile.specialty,
+        consultationFee: doctorProfile.consultationFee,
+        availability: doctorProfile.availability,
+        profileCompleted: true
+      });
+      Alert.alert('Success', 'Profile saved successfully');
+    } catch (err) {
+      console.error('Error saving doctor profile:', err);
+      Alert.alert('Error', 'Failed to save profile: ' + err.message);
+    } finally {
+      setProfileLoading(false);
     }
   };
 
@@ -238,6 +294,81 @@ export default function DoctorDashboard({ navigation }) {
     </View>
   );
 
+  // Profile content
+  const profileContent = (
+    <View style={styles.container}>
+      <View style={styles.profileHeader}>
+        <Text style={styles.profileTitle}>Professional Profile</Text>
+        <Text style={styles.profileSubtitle}>Complete your profile to be visible to patients</Text>
+      </View>
+      
+      <View style={styles.profileForm}>
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Specialty</Text>
+          <TextInput
+            style={styles.input}
+            value={doctorProfile.specialty}
+            onChangeText={(text) => setDoctorProfile({...doctorProfile, specialty: text})}
+            placeholder="e.g., Clinical Psychology, Psychiatry"
+            placeholderTextColor="#999"
+          />
+        </View>
+        
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Consultation Fee (USD per hour)</Text>
+          <TextInput
+            style={styles.input}
+            value={doctorProfile.consultationFee}
+            onChangeText={(text) => setDoctorProfile({...doctorProfile, consultationFee: text})}
+            placeholder="e.g., 50"
+            keyboardType="numeric"
+            placeholderTextColor="#999"
+          />
+        </View>
+        
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Availability Start Time</Text>
+          <TextInput
+            style={styles.input}
+            value={doctorProfile.availability.startTime}
+            onChangeText={(text) => setDoctorProfile({
+              ...doctorProfile, 
+              availability: {...doctorProfile.availability, startTime: text}
+            })}
+            placeholder="e.g., 09:00"
+            placeholderTextColor="#999"
+          />
+        </View>
+        
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Availability End Time</Text>
+          <TextInput
+            style={styles.input}
+            value={doctorProfile.availability.endTime}
+            onChangeText={(text) => setDoctorProfile({
+              ...doctorProfile, 
+              availability: {...doctorProfile.availability, endTime: text}
+            })}
+            placeholder="e.g., 17:00"
+            placeholderTextColor="#999"
+          />
+        </View>
+        
+        <TouchableOpacity 
+          style={styles.saveButton}
+          onPress={saveDoctorProfile}
+          disabled={profileLoading}
+        >
+          {profileLoading ? (
+            <ActivityIndicator color="#fff" />
+          ) : (
+            <Text style={styles.saveButtonText}>Save Profile</Text>
+          )}
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+
   return (
     <View style={styles.container}>
       <View style={styles.header}>
@@ -274,10 +405,20 @@ export default function DoctorDashboard({ navigation }) {
             )}
           </View>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'profile' && styles.activeTab]}
+          onPress={() => setActiveTab('profile')}
+        >
+          <Text style={[styles.tabText, activeTab === 'profile' && styles.activeTabText]}>
+            Profile
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Content based on active tab */}
-      {activeTab === 'dashboard' ? dashboardContent : appointmentsContent}
+      {activeTab === 'dashboard' ? dashboardContent : 
+       activeTab === 'appointments' ? appointmentsContent : 
+       profileContent}
     </View>
   );
 }
@@ -492,15 +633,15 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
   },
-  approveButton: {
-    backgroundColor: '#10b981',
+  actionButton: {
     flex: 1,
     marginHorizontal: 5,
   },
+  approveButton: {
+    backgroundColor: '#10b981',
+  },
   rejectButton: {
     backgroundColor: '#ef4444',
-    flex: 1,
-    marginHorizontal: 5,
   },
   callButton: {
     backgroundColor: '#2563eb',
@@ -521,5 +662,55 @@ const styles = StyleSheet.create({
   emptyText: {
     fontSize: 16,
     color: '#666',
+  },
+  // Profile styles
+  profileHeader: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  profileTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  profileSubtitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+  profileForm: {
+    padding: 20,
+  },
+  formGroup: {
+    marginBottom: 20,
+  },
+  label: {
+    fontSize: 16,
+    fontWeight: '600',
+    marginBottom: 8,
+    color: '#333',
+  },
+  input: {
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    borderRadius: 8,
+    padding: 12,
+    fontSize: 16,
+    color: '#000',
+    backgroundColor: '#fff',
+  },
+  saveButton: {
+    backgroundColor: '#2563eb',
+    padding: 15,
+    borderRadius: 8,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  saveButtonText: {
+    color: '#fff',
+    fontSize: 16,
+    fontWeight: 'bold',
   },
 });

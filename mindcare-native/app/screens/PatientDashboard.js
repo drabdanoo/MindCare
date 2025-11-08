@@ -8,7 +8,7 @@ import {
   ActivityIndicator,
   Alert,
 } from 'react-native';
-import { collection, query, where, onSnapshot } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../services/firebase';
 
@@ -17,9 +17,11 @@ const isFirebaseInitialized = !!auth && !!db;
 
 export default function PatientDashboard({ navigation }) {
   const [appointments, setAppointments] = useState([]);
+  const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard' or 'appointments'
+  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'appointments', or 'doctors'
 
   useEffect(() => {
     // Check if Firebase is initialized
@@ -79,6 +81,39 @@ export default function PatientDashboard({ navigation }) {
     };
   }, []);
 
+  const loadDoctors = async () => {
+    try {
+      setDoctorsLoading(true);
+      // Query for approved doctors with completed profiles
+      const q = query(
+        collection(db, 'users'),
+        where('userType', '==', 'doctor'),
+        where('approved', '==', true),
+        where('profileCompleted', '==', true)
+      );
+      
+      const querySnapshot = await getDocs(q);
+      const doctorsData = querySnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+      
+      setDoctors(doctorsData);
+    } catch (err) {
+      console.error('Error loading doctors:', err);
+      Alert.alert('Error', 'Failed to load doctors: ' + err.message);
+    } finally {
+      setDoctorsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    // Load doctors when the doctors tab is selected
+    if (activeTab === 'doctors' && doctors.length === 0) {
+      loadDoctors();
+    }
+  }, [activeTab]);
+
   const handleLogout = async () => {
     // Check if Firebase Auth is initialized
     if (!auth) {
@@ -115,6 +150,29 @@ export default function PatientDashboard({ navigation }) {
           <Text style={styles.buttonText}>Join Video Call</Text>
         </TouchableOpacity>
       )}
+    </View>
+  );
+
+  const renderDoctor = ({ item }) => (
+    <View style={styles.doctorCard}>
+      <View style={styles.doctorHeader}>
+        <Text style={styles.doctorName}>{item.fullName || 'Unknown Doctor'}</Text>
+        <Text style={styles.specialty}>{item.specialty || 'Specialty not specified'}</Text>
+      </View>
+      
+      <View style={styles.doctorInfo}>
+        <Text style={styles.fee}>Fee: ${item.consultationFee || 'N/A'} / hour</Text>
+        <Text style={styles.availability}>
+          Available: {item.availability?.startTime || '09:00'} - {item.availability?.endTime || '17:00'}
+        </Text>
+      </View>
+      
+      <TouchableOpacity 
+        style={styles.bookButton}
+        onPress={() => console.log('Book appointment with doctor:', item.id)}
+      >
+        <Text style={styles.bookButtonText}>Book Appointment</Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -191,15 +249,40 @@ export default function PatientDashboard({ navigation }) {
           <Text style={styles.emptyText}>No appointments yet</Text>
           <TouchableOpacity 
             style={styles.bookButton}
-            onPress={() => console.log('Navigate to book appointment')}
+            onPress={() => setActiveTab('doctors')}
           >
-            <Text style={styles.buttonText}>Book Appointment</Text>
+            <Text style={styles.buttonText}>Find a Doctor</Text>
           </TouchableOpacity>
         </View>
       ) : (
         <FlatList
           data={appointments}
           renderItem={renderAppointment}
+          keyExtractor={item => item.id}
+          contentContainerStyle={styles.listContainer}
+        />
+      )}
+    </View>
+  );
+
+  // Doctors content
+  const doctorsContent = (
+    <View style={styles.container}>
+      <View style={styles.doctorsHeader}>
+        <Text style={styles.doctorsTitle}>Available Doctors</Text>
+        <Text style={styles.doctorsSubtitle}>Browse our qualified mental health professionals</Text>
+      </View>
+      
+      {doctorsLoading ? (
+        <ActivityIndicator size="large" color="#2563eb" style={styles.loader} />
+      ) : doctors.length === 0 ? (
+        <View style={styles.emptyContainer}>
+          <Text style={styles.emptyText}>No doctors available at the moment</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={doctors}
+          renderItem={renderDoctor}
           keyExtractor={item => item.id}
           contentContainerStyle={styles.listContainer}
         />
@@ -241,10 +324,20 @@ export default function PatientDashboard({ navigation }) {
             )}
           </View>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, activeTab === 'doctors' && styles.activeTab]}
+          onPress={() => setActiveTab('doctors')}
+        >
+          <Text style={[styles.tabText, activeTab === 'doctors' && styles.activeTabText]}>
+            Doctors
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {/* Content based on active tab */}
-      {activeTab === 'dashboard' ? dashboardContent : appointmentsContent}
+      {activeTab === 'dashboard' ? dashboardContent : 
+       activeTab === 'appointments' ? appointmentsContent : 
+       doctorsContent}
     </View>
   );
 }
@@ -480,5 +573,54 @@ const styles = StyleSheet.create({
     paddingHorizontal: 30,
     paddingVertical: 12,
     borderRadius: 8,
+  },
+  // Doctors styles
+  doctorsHeader: {
+    padding: 20,
+    backgroundColor: '#fff',
+    borderBottomWidth: 1,
+    borderBottomColor: '#e5e7eb',
+  },
+  doctorsTitle: {
+    fontSize: 24,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 5,
+  },
+  doctorsSubtitle: {
+    fontSize: 16,
+    color: '#666',
+  },
+  doctorCard: {
+    backgroundColor: '#fff',
+    padding: 15,
+    borderRadius: 8,
+    marginBottom: 10,
+    borderLeftWidth: 4,
+    borderLeftColor: '#2563eb',
+  },
+  doctorHeader: {
+    marginBottom: 10,
+  },
+  specialty: {
+    fontSize: 16,
+    color: '#2563eb',
+    fontWeight: '600',
+  },
+  doctorInfo: {
+    marginBottom: 15,
+  },
+  fee: {
+    fontSize: 16,
+    color: '#333',
+    marginBottom: 5,
+  },
+  availability: {
+    fontSize: 14,
+    color: '#666',
+  },
+  bookButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

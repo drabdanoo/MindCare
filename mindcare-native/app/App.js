@@ -13,6 +13,7 @@ import PatientDashboard from './screens/PatientDashboard';
 import DoctorDashboard from './screens/DoctorDashboard';
 import VideoCallScreen from './screens/VideoCallScreen';
 import PendingApproval from './screens/PendingApproval';
+import AdminPanel from './screens/AdminPanel';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -44,6 +45,14 @@ function DoctorStack() {
 	);
 }
 
+function AdminStack() {
+	return (
+		<Stack.Navigator screenOptions={{ headerShown: false }}>
+			<Stack.Screen name="AdminPanel" component={AdminPanel} />
+		</Stack.Navigator>
+	);
+}
+
 function AppTabs({ userType }) {
 	return (
 		<Tab.Navigator
@@ -58,6 +67,12 @@ function AppTabs({ userType }) {
 					name="PatientTab"
 					component={PatientStack}
 					options={{ tabBarLabel: 'Dashboard' }}
+				/>
+			) : userType === 'admin' ? (
+				<Tab.Screen
+					name="AdminTab"
+					component={AdminStack}
+					options={{ tabBarLabel: 'Admin Panel' }}
 				/>
 			) : (
 				<Tab.Screen
@@ -125,7 +140,9 @@ export default function App() {
 	return (
 		<NavigationContainer>
 			{user ? (
-				userType === 'doctor' && !doctorApproved ? (
+				userType === 'admin' ? (
+					<AppTabs userType="admin" />
+				) : userType === 'doctor' && !doctorApproved ? (
 					<PendingApproval />
 				) : (
 					<AppTabs userType={userType} />
@@ -136,4 +153,3 @@ export default function App() {
 		</NavigationContainer>
 	);
 }
-
