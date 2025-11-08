@@ -1,5 +1,5 @@
 import React from 'react';
-import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Image } from 'react-native';
+import { TouchableOpacity, Text, StyleSheet, ActivityIndicator, Image, Platform } from 'react-native';
 import * as WebBrowser from 'expo-web-browser';
 import * as Google from 'expo-auth-session/providers/google';
 import { getAuth, GoogleAuthProvider, signInWithCredential } from 'firebase/auth';
@@ -48,7 +48,7 @@ export default function GoogleSignInButton({ onSignInSuccess, onSignInError }) {
           <Text style={styles.buttonText}>Sign in with Google</Text>
         </>
       ) : (
-        <ActivityIndicator size="small" color="#fff" />
+        <ActivityIndicator size="small" color="#757575" />
       )}
     </TouchableOpacity>
   );
@@ -63,14 +63,20 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     paddingHorizontal: 20,
     borderRadius: 4,
-    elevation: 2,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.25,
-    shadowRadius: 3.84,
+    // Cross-platform shadow: Android uses elevation; iOS uses shadow*; Web uses boxShadow
+    ...(Platform.select({
+      android: { elevation: 2 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.25,
+        shadowRadius: 3.84,
+      },
+      web: {
+        boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.25)',
+      },
+      default: {},
+    }) || {}),
     marginTop: 10,
   },
   googleIcon: {
