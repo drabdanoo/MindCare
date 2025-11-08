@@ -150,14 +150,74 @@ export default function DoctorDashboard({ navigation }) {
     }
   };
 
+  // Helpers for profile validation
+  const VALID_DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+  const isValidTime = (t) => {
+    if (typeof t !== 'string') return false;
+    const m = t.match(/^([01]\d|2[0-3]):([0-5]\d)$/);
+    return !!m;
+  };
+  const timeToMinutes = (t) => {
+    const [hh, mm] = t.split(':').map(Number);
+    return hh * 60 + mm;
+  };
+
   const saveDoctorProfile = async () => {
+    setProfileLoading(true);
     try {
-      setProfileLoading(true);
+      // Validate specialty
+      const specialty = (doctorProfile?.specialty ?? '').trim();
+      if (!specialty) {
+        setProfileLoading(false);
+        Alert.alert('Validation Error', 'Please enter your specialty.');
+        return;
+      }
+
+      // Validate and sanitize consultation fee
+      const feeStr = String(doctorProfile?.consultationFee ?? '').trim();
+      const feeNum = Number(feeStr);
+      if (!Number.isFinite(feeNum) || feeNum <= 0) {
+        setProfileLoading(false);
+        Alert.alert('Validation Error', 'Consultation fee must be a positive number.');
+        return;
+      }
+
+      // Validate availability
+      const availability = doctorProfile?.availability || {};
+      const startTime = (availability?.startTime ?? '').trim();
+      const endTime = (availability?.endTime ?? '').trim();
+      const days = Array.isArray(availability?.days) ? availability.days : [];
+
+      if (!isValidTime(startTime) || !isValidTime(endTime)) {
+        setProfileLoading(false);
+        Alert.alert('Validation Error', 'Availability times must be in HH:MM (24-hour) format.');
+        return;
+      }
+
+      if (timeToMinutes(endTime) <= timeToMinutes(startTime)) {
+        setProfileLoading(false);
+        Alert.alert('Validation Error', 'End time must be after start time.');
+        return;
+      }
+
+      if (!Array.isArray(days) || days.length === 0 || !days.every(d => VALID_DAYS.includes(d))) {
+        setProfileLoading(false);
+        Alert.alert('Validation Error', 'Please select at least one valid day of availability.');
+        return;
+      }
+
+      // Sanitize normalized fields
+      const normalizedAvailability = {
+        startTime,
+        endTime,
+        days: Array.from(new Set(days)).filter(d => VALID_DAYS.includes(d)),
+      };
+
       await updateDoc(doc(db, 'users', auth.currentUser.uid), {
-        specialty: doctorProfile.specialty,
-        consultationFee: doctorProfile.consultationFee,
-        availability: doctorProfile.availability,
-        profileCompleted: true
+        specialty,
+        consultationFee: feeNum,
+        availability: normalizedAvailability,
+        profileCompleted: true,
       });
       Alert.alert('Success', 'Profile saved successfully');
     } catch (err) {
@@ -263,13 +323,13 @@ export default function DoctorDashboard({ navigation }) {
               {item.status === 'pending' && (
                 <View style={styles.buttonContainer}>
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.approveButton]}
+                    style={[styles.actionButtonSecondary, styles.approveButton]}
                     onPress={() => updateAppointmentStatus(item.id, 'confirmed')}
                   >
                     <Text style={styles.buttonText}>Approve</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
-                    style={[styles.actionButton, styles.rejectButton]}
+                    style={[styles.actionButtonSecondary, styles.rejectButton]}
                     onPress={() => updateAppointmentStatus(item.id, 'rejected')}
                   >
                     <Text style={styles.buttonText}>Reject</Text>
@@ -633,7 +693,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     marginTop: 10,
   },
-  actionButton: {
+  actionButtonSecondary: {
     flex: 1,
     marginHorizontal: 5,
   },

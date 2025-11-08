@@ -132,9 +132,25 @@ This document summarizes all the improvements made to the MindCare application t
 
 ## 8. Known Limitations
 
-1. **Admin Panel Access**
-   - Currently no way to create admin users in the UI
-   - Would need to manually set `userType: 'admin'` in Firestore
+1. **Admin Creation and Access (Action Plan)**
+    - Replace manual admin assignment with a secure creation flow:
+       - Option A: First-user-on-empty-database bootstrap — when the `users` collection is empty, allow the first authenticated account to claim admin via a one-time setup screen; permanently disable this path after first admin is created.
+       - Option B: Protected setup endpoint — expose a backend-only callable endpoint guarded by a short-lived token generated via CLI. Enforce IP allowlist, rate limiting, nonce/replay protection, and HMAC-signed requests.
+    - Temporary fallback (if absolutely necessary before the secure flow ships):
+       - Use a dedicated, least-privilege service account with time-bound IAM to set `userType: 'admin'` via a one-off script.
+       - Store credentials only in a secure secret manager; rotate immediately after use and disable the service account.
+       - Maintain a step-by-step runbook with approver sign-off for traceability.
+    - Mandatory audit logging for all admin creations:
+       - Log actor (requesting principal), target user ID/email, timestamp, request ID, IP, user agent, and reason.
+       - Write to an append-only audit collection and provider logs; add alerts on unexpected admin creations or repeated failed attempts.
+    - Firestore Rules/IAM hardening:
+       - Deny any client-side write that sets or modifies `userType` to `admin`.
+       - Only Cloud Functions/authorized backend service accounts may set or change the admin flag.
+       - Add server-side validation in the callable function to enforce the authorized creation paths above.
+    - Migration plan (before production):
+       - Remove any manual procedures and switch to Option A or B.
+       - Backfill audit entries for any prior admin creations and review access logs.
+       - Pen-test the flow and add CI checks to fail if Firestore rules would permit client-side admin escalation.
 
 2. **Appointment Booking**
    - Booking functionality not yet implemented
