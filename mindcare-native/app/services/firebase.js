@@ -1,6 +1,7 @@
 import { initializeApp } from 'firebase/app';
 import { getAuth } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { getStorage } from 'firebase/storage';
 import { Platform } from 'react-native';
 
 // Avoid logging sensitive values to the console.
@@ -52,7 +53,7 @@ const firebaseConfig = {
 
 // Do not log full config to avoid leaking credentials
 
-let app, auth, db;
+let app, auth, db, storage;
 
 try {
   // Check if we have minimum required config
@@ -62,8 +63,10 @@ try {
     // Use getAuth() instead of initializeAuth for better compatibility
     auth = getAuth(app);
     
-    // Use the default database in the new project unless explicitly set otherwise
+  // Use the default database in the new project unless explicitly set otherwise
     db = getFirestore(app);
+  // Initialize Cloud Storage
+  storage = getStorage(app);
     
     // Firebase initialized.
   } else {
@@ -75,6 +78,7 @@ try {
   // Provide fallback objects to prevent app crashes
   auth = null;
   db = null;
+  storage = null;
 }
 
-export { auth, db };
+export { auth, db, storage };

@@ -1,10 +1,103 @@
 rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
-    // Development: allow authenticated users to read/write.
-    // Tighten these rules for production by collection and role.
-    match /{document=**} {
-      allow read, write: if request.auth != null;
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    // =====================
+    // Chats security rules
+    // Structure:
+    // chats/{conversationId} -> { doctorId: string, patientId: string }
+    // chats/{conversationId}/messages/{messageId} -> { senderId, receiverId, text, patientId, doctorId, timestamp }
+    // =====================
+    match /chats/{conversationId} {
+      function isChatParticipant() {
+        return isSignedIn() &&
+          (resource.data.patientId == request.auth.uid || resource.data.doctorId == request.auth.uid);
+      }
+
+      // Only participants can read/create/update the chat doc (e.g., for metadata)
+      allow read: if isChatParticipant();
+      allow create: if isSignedIn() &&
+        (request.resource.data.patientId == request.auth.uid || request.resource.data.doctorId == request.auth.uid) &&
+        request.resource.data.patientId is string && request.resource.data.doctorId is string;
+      // Allow participants to update limited metadata, but never participants themselves
+      allow update: if isChatParticipant() &&
+        request.resource.data.patientId == resource.data.patientId &&
+        request.resource.data.doctorId == resource.data.doctorId;
+      // Prevent hard deletes of chat docs
+      allow delete: if false;
+
+      // Messages subcollection
+      match /messages/{messageId} {
+        function messageParticipantsValid() {
+          return request.resource.data.patientId is string && request.resource.data.doctorId is string;
+        }
+
+        // Only participants can read messages
+        allow read: if isChatParticipant();
+
+        // Only a participant can send a message and must be the senderId
+        allow create: if isSignedIn() && messageParticipantsValid() &&
+          (request.auth.uid == request.resource.data.patientId || request.auth.uid == request.resource.data.doctorId) &&
+          request.resource.data.senderId == request.auth.uid &&
+          request.resource.data.receiverId is string &&
+          request.resource.data.text is string;
+
+        // Disallow edits/deletes to individual messages
+        allow update, delete: if false;
+      }
+    }
+
+    // =====================
+    // Appointments security rules
+    // Structure:
+    // appointments/{appointmentId}
+    // Required fields on create: patientId, doctorId, date (YYYY-MM-DD), timeSlot, status ('pending')
+    // =====================
+    match /appointments/{appointmentId} {
+      function isPatientOwner() { return isSignedIn() && resource.data.patientId == request.auth.uid; }
+      function isDoctorOwner() { return isSignedIn() && resource.data.doctorId == request.auth.uid; }
+      function isCreateByPatient() {
+        return isSignedIn() && request.resource.data.patientId == request.auth.uid;
+      }
+
+      allow create: if isCreateByPatient() &&
+        request.resource.data.doctorId is string &&
+        request.resource.data.date is string &&
+        request.resource.data.timeSlot is string &&
+        request.resource.data.status == 'pending';
+
+      // Patients can read their own; doctors can read their own
+      allow read: if isPatientOwner() || isDoctorOwner();
+
+      // Only status updates are allowed; no deletes
+      // Patients: can only set status to 'cancelled'
+      // Doctors: can set status to 'confirmed', 'rejected', or 'completed'
+      allow update: if isSignedIn() &&
+        request.resource.data.diff(resource.data).changedKeys().hasOnly(['status']) && (
+          (isPatientOwner() && request.resource.data.status == 'cancelled') ||
+          (isDoctorOwner() && (
+            request.resource.data.status == 'confirmed' ||
+            request.resource.data.status == 'rejected' ||
+            request.resource.data.status == 'completed'
+          ))
+        );
+
+      allow delete: if false;
+    }
+
+    // =====================
+    // Users collection (basic profile access)
+    // Doctors need to read patient names/photos to manage appointments
+    // Users can read profiles; only owners can write their own profile
+    // =====================
+    match /users/{userId} {
+      allow read: if isSignedIn();
+      allow create: if isSignedIn() && request.auth.uid == userId;
+      allow update: if isSignedIn() && request.auth.uid == userId;
+      allow delete: if false;
     }
   }
 }

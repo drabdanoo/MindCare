@@ -11,9 +11,13 @@ import LoginScreen from './screens/LoginScreen';
 import RegisterScreen from './screens/RegisterScreen';
 import PatientDashboard from './screens/PatientDashboard';
 import DoctorDashboard from './screens/DoctorDashboard';
+import DoctorAppointmentManager from './screens/DoctorAppointmentManager';
 import VideoCallScreen from './screens/VideoCallScreen';
 import PendingApproval from './screens/PendingApproval';
 import AdminPanel from './screens/AdminPanel';
+import DoctorProfileDetail from './screens/DoctorProfileDetail';
+import SecureChatScreen from './screens/SecureChatScreen';
+import AppointmentScheduler from './screens/AppointmentScheduler';
 
 const Stack = createNativeStackNavigator();
 const Tab = createBottomTabNavigator();
@@ -32,6 +36,9 @@ function PatientStack() {
 		<Stack.Navigator screenOptions={{ headerShown: false }}>
 			<Stack.Screen name="PatientDashboard" component={PatientDashboard} />
 			<Stack.Screen name="VideoCall" component={VideoCallScreen} />
+			<Stack.Screen name="DoctorProfileDetail" component={DoctorProfileDetail} />
+			<Stack.Screen name="SecureChat" component={SecureChatScreen} />
+			<Stack.Screen name="AppointmentScheduler" component={AppointmentScheduler} />
 		</Stack.Navigator>
 	);
 }
@@ -41,6 +48,7 @@ function DoctorStack() {
 		<Stack.Navigator screenOptions={{ headerShown: false }}>
 			<Stack.Screen name="DoctorDashboard" component={DoctorDashboard} />
 			<Stack.Screen name="VideoCall" component={VideoCallScreen} />
+			<Stack.Screen name="DoctorAppointmentManager" component={DoctorAppointmentManager} />
 		</Stack.Navigator>
 	);
 }

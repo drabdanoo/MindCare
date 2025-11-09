@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import * as ImagePicker from 'expo-image-picker';
 import {
   View,
   FlatList,
@@ -8,10 +9,13 @@ import {
   ActivityIndicator,
   Alert,
   TextInput,
+  Image,
+  Platform,
 } from 'react-native';
 import { collection, query, where, onSnapshot, updateDoc, doc, getDoc } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
-import { auth, db } from '../services/firebase';
+import { auth, db, storage } from '../services/firebase';
+import { ref, uploadBytes, getDownloadURL } from 'firebase/storage';
 
 // Check if Firebase services are properly initialized
 const isFirebaseInitialized = !!auth && !!db;
@@ -28,9 +32,11 @@ export default function DoctorDashboard({ navigation }) {
       startTime: '09:00',
       endTime: '17:00',
       days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-    }
+    },
+    photoURL: ''
   });
   const [profileLoading, setProfileLoading] = useState(false);
+  const [selectedImageUri, setSelectedImageUri] = useState('');
 
   useEffect(() => {
     // Check if Firebase is initialized
@@ -106,7 +112,8 @@ export default function DoctorDashboard({ navigation }) {
             startTime: '09:00',
             endTime: '17:00',
             days: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']
-          }
+          },
+          photoURL: userData.photoURL || ''
         });
       }
     } catch (err) {
@@ -162,6 +169,28 @@ export default function DoctorDashboard({ navigation }) {
     return hh * 60 + mm;
   };
 
+  const pickProfileImage = async () => {
+    try {
+      const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (status !== 'granted') {
+        Alert.alert('Permission Required', 'We need access to your photos to select a profile picture.');
+        return;
+      }
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ImagePicker.MediaTypeOptions.Images,
+        quality: 0.8,
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+      if (!result.canceled && result.assets && result.assets.length > 0) {
+        setSelectedImageUri(result.assets[0].uri);
+      }
+    } catch (e) {
+      console.error('Image picking failed', e);
+      Alert.alert('Error', 'Failed to pick image. Please try again.');
+    }
+  };
+
   const saveDoctorProfile = async () => {
     setProfileLoading(true);
     try {
@@ -212,14 +241,39 @@ export default function DoctorDashboard({ navigation }) {
         endTime,
         days: Array.from(new Set(days)).filter(d => VALID_DAYS.includes(d)),
       };
+      // Upload profile photo if a new image was selected
+      let uploadedPhotoURL = null;
+      if (selectedImageUri) {
+        try {
+          const response = await fetch(selectedImageUri);
+          const blob = await response.blob();
+          const fileRef = ref(storage, `profilePhotos/${auth.currentUser.uid}_${Date.now()}.jpg`);
+          await uploadBytes(fileRef, blob, { contentType: blob.type || 'image/jpeg' });
+          uploadedPhotoURL = await getDownloadURL(fileRef);
+        } catch (uploadErr) {
+          console.error('Photo upload failed:', uploadErr);
+          setProfileLoading(false);
+          Alert.alert('Error', 'Failed to upload profile photo. Please try again.');
+          return;
+        }
+      }
 
-      await updateDoc(doc(db, 'users', auth.currentUser.uid), {
+      const payload = {
         specialty,
         consultationFee: feeNum,
         availability: normalizedAvailability,
         profileCompleted: true,
-      });
+      };
+      if (uploadedPhotoURL) {
+        payload.photoURL = uploadedPhotoURL;
+      }
+
+      await updateDoc(doc(db, 'users', auth.currentUser.uid), payload);
       Alert.alert('Success', 'Profile saved successfully');
+      if (uploadedPhotoURL) {
+        setDoctorProfile(prev => ({ ...prev, photoURL: uploadedPhotoURL }));
+        setSelectedImageUri('');
+      }
     } catch (err) {
       console.error('Error saving doctor profile:', err);
       Alert.alert('Error', 'Failed to save profile: ' + err.message);
@@ -277,12 +331,10 @@ export default function DoctorDashboard({ navigation }) {
       
       <TouchableOpacity 
         style={styles.actionButton}
-        onPress={() => setActiveTab('appointments')}
+        onPress={() => navigation.navigate('DoctorAppointmentManager')}
       >
         <Text style={styles.actionButtonText}>
-          {appointments.filter(a => a.status === 'pending').length > 0 
-            ? `Review ${appointments.filter(a => a.status === 'pending').length} Pending Requests` 
-            : 'View All Appointments'}
+          Manage Appointments
         </Text>
       </TouchableOpacity>
     </View>
@@ -363,6 +415,27 @@ export default function DoctorDashboard({ navigation }) {
       </View>
       
       <View style={styles.profileForm}>
+        {/* Profile Photo */}
+        <View style={styles.formGroup}>
+          <Text style={styles.label}>Profile Photo</Text>
+          <View style={styles.photoRow}>
+            <View style={styles.photoPreviewWrapper}>
+              {(selectedImageUri || doctorProfile.photoURL) ? (
+                <Image
+                  source={{ uri: selectedImageUri || doctorProfile.photoURL }}
+                  style={styles.photoPreview}
+                />
+              ) : (
+                <View style={[styles.photoPreview, styles.photoPlaceholder]}>
+                  <Text style={{ color: '#999' }}>No photo</Text>
+                </View>
+              )}
+            </View>
+            <TouchableOpacity style={styles.photoButton} onPress={pickProfileImage}>
+              <Text style={styles.photoButtonText}>Choose Photo</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
         <View style={styles.formGroup}>
           <Text style={styles.label}>Specialty</Text>
           <TextInput
@@ -568,14 +641,22 @@ const styles = StyleSheet.create({
     padding: 20,
     borderRadius: 10,
     marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...Platform.select({
+      android: { elevation: 5 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+      },
+      web: {
+        boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.1)',
+      },
+      default: {},
+    }) || {},
   },
   welcomeTitle: {
     fontSize: 22,
@@ -600,14 +681,22 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flex: 1,
     marginHorizontal: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
+    ...Platform.select({
+      android: { elevation: 5 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: {
+          width: 0,
+          height: 2,
+        },
+        shadowOpacity: 0.1,
+        shadowRadius: 3.84,
+      },
+      web: {
+        boxShadow: '0px 2px 3.84px rgba(0, 0, 0, 0.1)',
+      },
+      default: {},
+    }) || {},
   },
   statNumber: {
     fontSize: 24,
@@ -772,5 +861,34 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontSize: 16,
     fontWeight: 'bold',
+  },
+  photoRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  photoPreviewWrapper: {
+    marginRight: 12,
+  },
+  photoPreview: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: '#eee',
+  },
+  photoPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  photoButton: {
+    backgroundColor: '#2563eb',
+    paddingVertical: 10,
+    paddingHorizontal: 14,
+    borderRadius: 8,
+  },
+  photoButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
 });

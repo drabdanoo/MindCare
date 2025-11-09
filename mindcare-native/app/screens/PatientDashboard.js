@@ -7,6 +7,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Platform,
+  TextInput,
+  Image,
 } from 'react-native';
 import { collection, query, where, onSnapshot, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
@@ -15,112 +18,140 @@ import { auth, db } from '../services/firebase';
 // Check if Firebase services are properly initialized
 const isFirebaseInitialized = !!auth && !!db;
 
+// Utility: derive two-letter initials from doctor name
+const getInitials = (fullName) => {
+  if (!fullName || typeof fullName !== 'string') return 'DR';
+  const parts = fullName.trim().split(/\s+/).filter(Boolean);
+  if (parts.length >= 2) {
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+  return 'DR';
+};
+
+// Doctor Card Component - now fully pressable to navigate to detail
+const DoctorCard = ({ doctor, onPress }) => {
+  const initials = getInitials(doctor.fullName || 'Doctor');
+  const hasPhoto = typeof doctor.photoURL === 'string' && doctor.photoURL.trim().length > 0;
+  return (
+    <TouchableOpacity activeOpacity={0.85} onPress={onPress} style={styles.doctorCard}>
+      <View style={styles.doctorHeaderRow}>
+        {hasPhoto ? (
+          <Image source={{ uri: doctor.photoURL }} style={styles.doctorAvatar} />
+        ) : (
+          <View style={[styles.doctorAvatar, styles.doctorAvatarPlaceholder]}>
+            <Text style={styles.avatarPlaceholderText}>{initials}</Text>
+          </View>
+        )}
+        <View style={styles.doctorHeaderText}>
+          <Text style={styles.doctorName}>{doctor.fullName || 'Unknown Doctor'}</Text>
+          <Text style={styles.specialty}>{doctor.specialty || 'Specialty not specified'}</Text>
+        </View>
+      </View>
+      <View style={styles.doctorInfo}>
+        <Text style={styles.fee}>Fee: ${doctor.consultationFee || 'N/A'} / hour</Text>
+      </View>
+      <View style={styles.cardActionsRow}>
+        <Text style={styles.tapHint}>Tap for full profile</Text>
+      </View>
+    </TouchableOpacity>
+  );
+};
+
 export default function PatientDashboard({ navigation }) {
   const [appointments, setAppointments] = useState([]);
   const [doctors, setDoctors] = useState([]);
+  const [filteredDoctors, setFilteredDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [doctorsLoading, setDoctorsLoading] = useState(false);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [activeTab, setActiveTab] = useState('dashboard'); // 'dashboard', 'appointments', or 'doctors'
+  const [searchQuery, setSearchQuery] = useState('');
 
+  // Fetch appointments
   useEffect(() => {
-    // Check if Firebase is initialized
-    if (!isFirebaseInitialized) {
-      setError('Firebase services are not properly configured');
+    if (!isFirebaseInitialized || !auth.currentUser) {
+      setError('User not authenticated or Firebase not configured');
       setLoading(false);
       return;
     }
 
-    let unsubscribe;
+    const q = query(
+      collection(db, 'appointments'),
+      where('patientId', '==', auth.currentUser.uid)
+    );
 
-    // Ensure auth.currentUser exists before querying
-    if (!auth.currentUser) {
-      setError('User not authenticated');
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const data = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      setAppointments(data);
       setLoading(false);
-      return;
-    }
-
-    try {
-      const q = query(
-        collection(db, 'appointments'),
-        where('patientId', '==', auth.currentUser.uid)
-      );
-
-      unsubscribe = onSnapshot(
-        q,
-        (snapshot) => {
-          try {
-            const data = snapshot.docs.map(doc => ({
-              id: doc.id,
-              ...doc.data(),
-            }));
-            setAppointments(data);
-            setError(null);
-          } catch (err) {
-            console.error('Error mapping appointments:', err);
-            setError('Failed to load appointments');
-          }
-          setLoading(false);
-        },
-        (err) => {
-          console.error('Firestore listener error:', err);
-          setError('Failed to fetch appointments: ' + err.message);
-          setLoading(false);
-        }
-      );
-    } catch (err) {
-      console.error('Error setting up listener:', err);
-      setError('Failed to set up appointments listener: ' + err.message);
+    }, (err) => {
+      console.error('Error fetching appointments:', err);
+      setError('Failed to load appointments.');
       setLoading(false);
-    }
+    });
 
-    return () => {
-      if (unsubscribe) {
-        unsubscribe();
-      }
-    };
+    return () => unsubscribe();
   }, []);
 
-  const loadDoctors = async () => {
-    try {
-      setDoctorsLoading(true);
-      // Query for approved doctors with completed profiles
-      const q = query(
-        collection(db, 'users'),
-        where('userType', '==', 'doctor'),
-        where('approved', '==', true),
-        where('profileCompleted', '==', true)
-      );
-      
-      const querySnapshot = await getDocs(q);
-      const doctorsData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-      
-      setDoctors(doctorsData);
-    } catch (err) {
-      console.error('Error loading doctors:', err);
-      Alert.alert('Error', 'Failed to load doctors: ' + err.message);
-    } finally {
-      setDoctorsLoading(false);
-    }
-  };
-
+  // Fetch doctors
   useEffect(() => {
-    // Load doctors when the doctors tab is selected
-    if (activeTab === 'doctors' && doctors.length === 0) {
-      loadDoctors();
+    const loadDoctors = async () => {
+      if (!isFirebaseInitialized) {
+        setDoctorsLoading(false);
+        return;
+      }
+      try {
+        const q = query(
+          collection(db, 'users'),
+          where('userType', '==', 'doctor'),
+          where('approved', '==', true)
+        );
+        
+        const querySnapshot = await getDocs(q);
+        
+        const doctorsData = querySnapshot.docs
+          .map(doc => ({ id: doc.id, ...doc.data() }))
+          .filter(doctor => 
+            doctor.specialty && 
+            doctor.consultationFee && 
+            doctor.availability
+          );
+        
+        setDoctors(doctorsData);
+        setFilteredDoctors(doctorsData);
+      } catch (err) {
+        console.error('Error loading doctors:', err);
+        Alert.alert('Error', 'Failed to load doctors: ' + err.message);
+      } finally {
+        setDoctorsLoading(false);
+      }
+    };
+
+    loadDoctors();
+  }, []);
+
+  // Handle search filtering
+  useEffect(() => {
+    if (searchQuery.trim() === '') {
+      setFilteredDoctors(doctors);
+    } else {
+      const lowercasedQuery = searchQuery.toLowerCase();
+      const filtered = doctors.filter(doctor => {
+        const nameMatch = doctor.fullName?.toLowerCase().includes(lowercasedQuery);
+        const specialtyMatch = doctor.specialty?.toLowerCase().includes(lowercasedQuery);
+        return nameMatch || specialtyMatch;
+      });
+      setFilteredDoctors(filtered);
     }
-  }, [activeTab]);
+  }, [searchQuery, doctors]);
 
   const handleLogout = async () => {
-    // Check if Firebase Auth is initialized
     if (!auth) {
       Alert.alert('Error', 'Authentication service is not available');
       return;
     }
-
     try {
       await signOut(auth);
     } catch (error) {
@@ -128,7 +159,169 @@ export default function PatientDashboard({ navigation }) {
     }
   };
 
-  const renderAppointment = ({ item }) => (
+  const cancelAppointment = async (appointmentId) => {
+    try {
+      // Lazy import to avoid top-level import since only used here
+      const { doc, updateDoc } = await import('firebase/firestore');
+      const ref = doc(db, 'appointments', appointmentId);
+      await updateDoc(ref, { status: 'cancelled' });
+    } catch (e) {
+      console.error('Failed to cancel appointment', e);
+      Alert.alert('Error', 'Unable to cancel appointment.');
+    }
+  };
+
+  const renderAppointment = ({ item }) => {
+    const showJoin = item.status === 'confirmed';
+    const showCancel = ['pending', 'confirmed'].includes(item.status);
+    return (
+      <View style={styles.appointmentCard}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.doctorName}>{item.doctorName || 'N/A'}</Text>
+          <Text style={[styles.status, { color: getStatusColor(item.status) }]}>
+            {item.status || 'pending'}
+          </Text>
+        </View>
+        <Text style={styles.appointmentTime}>
+          {item.date || 'TBD'} at {item.time || item.timeSlot || 'TBD'}
+        </Text>
+        <View style={styles.appointmentActionsRow}>
+          {showJoin && (
+            <TouchableOpacity
+              style={[styles.smallButton, styles.joinButton]}
+              onPress={() => navigation.navigate('VideoCall', { appointmentId: item.id })}
+            >
+              <Text style={styles.smallButtonText}>Join Call</Text>
+            </TouchableOpacity>
+          )}
+          {showCancel && (
+            <TouchableOpacity
+              style={[styles.smallButton, styles.cancelButton]}
+              onPress={() => cancelAppointment(item.id)}
+            >
+              <Text style={styles.smallButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      </View>
+    );
+  };
+
+  if (!isFirebaseInitialized) {
+    return (
+      <View style={styles.container}>
+        <View style={styles.header}>
+          <Text style={styles.title}>My Dashboard</Text>
+        </View>
+        <View style={styles.errorContainer}>
+          <Text style={styles.errorText}>Service is not available.</Text>
+        </View>
+      </View>
+    );
+  }
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={styles.title}>Patient Dashboard</Text>
+        <TouchableOpacity onPress={handleLogout}>
+          <Text style={styles.logoutButton}>Logout</Text>
+        </TouchableOpacity>
+      </View>
+
+      <FlatList
+        ListHeaderComponent={
+          <>
+            <View style={styles.doctorsSection}>
+              <Text style={styles.doctorsTitle}>Find a Doctor</Text>
+              <TextInput
+                style={styles.searchInput}
+                placeholder="Search by name or specialty..."
+                placeholderTextColor="#999"
+                value={searchQuery}
+                onChangeText={setSearchQuery}
+              />
+              {doctorsLoading ? (
+                <ActivityIndicator size="large" color="#2563eb" style={{ marginTop: 20 }} />
+              ) : (
+                filteredDoctors.length === 0 && <Text style={styles.emptyText}>No doctors found.</Text>
+              )}
+            </View>
+          </>
+        }
+        data={filteredDoctors}
+        renderItem={({ item }) => (
+          <DoctorCard
+            doctor={item}
+            onPress={() => navigation.navigate('DoctorProfileDetail', { doctor: item })}
+          />
+        )}
+        keyExtractor={item => item.id}
+        contentContainerStyle={styles.listContainer}
+        ListFooterComponent={
+            <>
+              <View style={styles.appointmentsSection}>
+                <Text style={styles.appointmentsTitle}>My Appointments</Text>
+                {loading ? (
+                  <ActivityIndicator size="large" color="#2563eb" />
+                ) : (
+                  <>
+                    <AppointmentBuckets appointments={appointments} />
+                  </>
+                )}
+              </View>
+            </>
+        }
+      />
+    </View>
+  );
+}
+
+// Component to bucket appointments into Upcoming / Past
+function AppointmentBuckets({ appointments }) {
+  if (!appointments || appointments.length === 0) {
+    return <Text style={styles.emptyText}>You have no appointments.</Text>;
+  }
+  const now = new Date();
+  const todayStr = now.toISOString().split('T')[0];
+
+  const upcoming = [];
+  const past = [];
+  appointments.forEach(appt => {
+    const apptDateStr = appt.date;
+    // Prioritize explicit completed/cancelled as past
+    if (['completed', 'cancelled', 'rejected'].includes(appt.status)) {
+      past.push(appt);
+      return;
+    }
+    if (apptDateStr < todayStr) {
+      past.push(appt);
+    } else {
+      upcoming.push(appt);
+    }
+  });
+
+  return (
+    <View>
+      <Text style={styles.bucketTitle}>Upcoming</Text>
+      {upcoming.length === 0 ? (
+        <Text style={styles.bucketEmpty}>No upcoming appointments.</Text>
+      ) : (
+        upcoming.map(item => <View key={item.id}>{renderInlineAppointment(item)}</View>)
+      )}
+      <Text style={styles.bucketTitle}>Past</Text>
+      {past.length === 0 ? (
+        <Text style={styles.bucketEmpty}>No past appointments.</Text>
+      ) : (
+        past.map(item => <View key={item.id}>{renderInlineAppointment(item)}</View>)
+      )}
+    </View>
+  );
+}
+
+// Reuse card rendering inside bucket
+function renderInlineAppointment(item) {
+  return (
     <View style={styles.appointmentCard}>
       <View style={styles.cardHeader}>
         <Text style={styles.doctorName}>{item.doctorName || 'N/A'}</Text>
@@ -137,221 +330,18 @@ export default function PatientDashboard({ navigation }) {
         </Text>
       </View>
       <Text style={styles.appointmentTime}>
-        {item.date || 'TBD'} at {item.time || 'TBD'}
+        {item.date || 'TBD'} at {item.time || item.timeSlot || 'TBD'}
       </Text>
-      <Text style={styles.sessionType}>{item.sessionType || 'standard'} session</Text>
-      <Text style={styles.reason}>{item.reason || 'No details provided'}</Text>
-
-      {item.status === 'confirmed' && (
-        <TouchableOpacity
-          style={styles.callButton}
-          onPress={() => navigation.navigate('VideoCall', { appointmentId: item.id })}
-        >
-          <Text style={styles.buttonText}>Join Video Call</Text>
-        </TouchableOpacity>
-      )}
-    </View>
-  );
-
-  const renderDoctor = ({ item }) => (
-    <View style={styles.doctorCard}>
-      <View style={styles.doctorHeader}>
-        <Text style={styles.doctorName}>{item.fullName || 'Unknown Doctor'}</Text>
-        <Text style={styles.specialty}>{item.specialty || 'Specialty not specified'}</Text>
-      </View>
-      
-      <View style={styles.doctorInfo}>
-        <Text style={styles.fee}>Fee: ${item.consultationFee || 'N/A'} / hour</Text>
-        <Text style={styles.availability}>
-          Available: {item.availability?.startTime || '09:00'} - {item.availability?.endTime || '17:00'}
-        </Text>
-      </View>
-      
-      <TouchableOpacity 
-        style={styles.bookButton}
-        onPress={() => console.log('Book appointment with doctor:', item.id)}
-      >
-        <Text style={styles.bookButtonText}>Book Appointment</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  // Display error message if Firebase is not initialized
-  if (!isFirebaseInitialized) {
-    return (
-      <View style={styles.container}>
-        <View style={styles.header}>
-          <Text style={styles.title}>My Dashboard</Text>
-        </View>
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>
-            Appointment service is not available. Please contact support.
-          </Text>
-        </View>
-      </View>
-    );
-  }
-
-  // Dashboard content
-  const dashboardContent = (
-    <View style={styles.dashboardContainer}>
-      <View style={styles.welcomeCard}>
-        <Text style={styles.welcomeTitle}>Welcome to MindCare</Text>
-        <Text style={styles.welcomeText}>
-          Your mental health journey starts here. Book appointments with qualified professionals 
-          and take control of your wellbeing.
-        </Text>
-      </View>
-      
-      <View style={styles.statsContainer}>
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>{appointments.length}</Text>
-          <Text style={styles.statLabel}>Total Appointments</Text>
-        </View>
-        
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>
-            {appointments.filter(a => a.status === 'confirmed').length}
-          </Text>
-          <Text style={styles.statLabel}>Confirmed</Text>
-        </View>
-        
-        <View style={styles.statCard}>
-          <Text style={styles.statNumber}>
-            {appointments.filter(a => a.status === 'pending').length}
-          </Text>
-          <Text style={styles.statLabel}>Pending</Text>
-        </View>
-      </View>
-      
-      <TouchableOpacity 
-        style={styles.actionButton}
-        onPress={() => setActiveTab('appointments')}
-      >
-        <Text style={styles.actionButtonText}>View All Appointments</Text>
-      </TouchableOpacity>
-    </View>
-  );
-
-  // Appointments content
-  const appointmentsContent = (
-    <View style={styles.container}>
-      {error && (
-        <View style={styles.errorContainer}>
-          <Text style={styles.errorText}>{error}</Text>
-        </View>
-      )}
-
-      {loading ? (
-        <ActivityIndicator size="large" color="#2563eb" style={styles.loader} />
-      ) : appointments.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No appointments yet</Text>
-          <TouchableOpacity 
-            style={styles.bookButton}
-            onPress={() => setActiveTab('doctors')}
-          >
-            <Text style={styles.buttonText}>Find a Doctor</Text>
-          </TouchableOpacity>
-        </View>
-      ) : (
-        <FlatList
-          data={appointments}
-          renderItem={renderAppointment}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
-    </View>
-  );
-
-  // Doctors content
-  const doctorsContent = (
-    <View style={styles.container}>
-      <View style={styles.doctorsHeader}>
-        <Text style={styles.doctorsTitle}>Available Doctors</Text>
-        <Text style={styles.doctorsSubtitle}>Browse our qualified mental health professionals</Text>
-      </View>
-      
-      {doctorsLoading ? (
-        <ActivityIndicator size="large" color="#2563eb" style={styles.loader} />
-      ) : doctors.length === 0 ? (
-        <View style={styles.emptyContainer}>
-          <Text style={styles.emptyText}>No doctors available at the moment</Text>
-        </View>
-      ) : (
-        <FlatList
-          data={doctors}
-          renderItem={renderDoctor}
-          keyExtractor={item => item.id}
-          contentContainerStyle={styles.listContainer}
-        />
-      )}
-    </View>
-  );
-
-  return (
-    <View style={styles.container}>
-      <View style={styles.header}>
-        <Text style={styles.title}>My Dashboard</Text>
-        <TouchableOpacity onPress={handleLogout}>
-          <Text style={styles.logoutButton}>Logout</Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Tab Navigation */}
-      <View style={styles.tabContainer}>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'dashboard' && styles.activeTab]}
-          onPress={() => setActiveTab('dashboard')}
-        >
-          <Text style={[styles.tabText, activeTab === 'dashboard' && styles.activeTabText]}>
-            Dashboard
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'appointments' && styles.activeTab]}
-          onPress={() => setActiveTab('appointments')}
-        >
-          <View style={styles.tabWithBadge}>
-            <Text style={[styles.tabText, activeTab === 'appointments' && styles.activeTabText]}>
-              Appointments
-            </Text>
-            {appointments.length > 0 && (
-              <View style={styles.badge}>
-                <Text style={styles.badgeText}>{appointments.length}</Text>
-              </View>
-            )}
-          </View>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.tab, activeTab === 'doctors' && styles.activeTab]}
-          onPress={() => setActiveTab('doctors')}
-        >
-          <Text style={[styles.tabText, activeTab === 'doctors' && styles.activeTabText]}>
-            Doctors
-          </Text>
-        </TouchableOpacity>
-      </View>
-
-      {/* Content based on active tab */}
-      {activeTab === 'dashboard' ? dashboardContent : 
-       activeTab === 'appointments' ? appointmentsContent : 
-       doctorsContent}
     </View>
   );
 }
 
 const getStatusColor = (status) => {
   switch (status) {
-    case 'confirmed':
-      return '#10b981';
-    case 'pending':
-      return '#f59e0b';
-    case 'rejected':
-      return '#ef4444';
-    default:
-      return '#666';
+    case 'confirmed': return '#10b981';
+    case 'pending': return '#f59e0b';
+    case 'rejected': return '#ef4444';
+    default: return '#666';
   }
 };
 
@@ -379,153 +369,129 @@ const styles = StyleSheet.create({
     color: '#ef4444',
     fontWeight: 'bold',
   },
-  tabContainer: {
-    flexDirection: 'row',
+  doctorsSection: {
+    paddingHorizontal: 15,
+    paddingTop: 20,
+    paddingBottom: 10,
     backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
   },
-  tab: {
-    flex: 1,
-    paddingVertical: 15,
-    alignItems: 'center',
-  },
-  activeTab: {
-    borderBottomWidth: 2,
-    borderBottomColor: '#2563eb',
-  },
-  tabText: {
-    fontSize: 16,
-    color: '#666',
-  },
-  activeTabText: {
-    color: '#2563eb',
-    fontWeight: '600',
-  },
-  tabWithBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  badge: {
-    backgroundColor: '#ef4444',
-    borderRadius: 10,
-    paddingHorizontal: 6,
-    paddingVertical: 2,
-    marginLeft: 5,
-  },
-  badgeText: {
-    color: '#fff',
-    fontSize: 12,
-    fontWeight: 'bold',
-  },
-  dashboardContainer: {
-    flex: 1,
-    padding: 20,
-  },
-  welcomeCard: {
-    backgroundColor: '#fff',
-    padding: 20,
-    borderRadius: 10,
-    marginBottom: 20,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  welcomeTitle: {
+  doctorsTitle: {
     fontSize: 22,
     fontWeight: 'bold',
     color: '#333',
-    marginBottom: 10,
+    marginBottom: 15,
   },
-  welcomeText: {
+  searchInput: {
+    height: 50,
+    borderWidth: 1,
+    borderColor: '#ddd',
+    borderRadius: 8,
+    paddingHorizontal: 15,
     fontSize: 16,
-    color: '#666',
-    lineHeight: 22,
-  },
-  statsContainer: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    marginBottom: 30,
-  },
-  statCard: {
     backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-    flex: 1,
-    marginHorizontal: 5,
-    shadowColor: '#000',
-    shadowOffset: {
-      width: 0,
-      height: 2,
-    },
-    shadowOpacity: 0.1,
-    shadowRadius: 3.84,
-    elevation: 5,
-  },
-  statNumber: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#2563eb',
-  },
-  statLabel: {
-    fontSize: 14,
-    color: '#666',
-    marginTop: 5,
-  },
-  actionButton: {
-    backgroundColor: '#2563eb',
-    padding: 15,
-    borderRadius: 10,
-    alignItems: 'center',
-  },
-  actionButtonText: {
-    color: '#fff',
-    fontSize: 16,
-    fontWeight: '600',
-  },
-  errorContainer: {
-    backgroundColor: '#fee2e2',
-    padding: 12,
-    margin: 15,
-    borderRadius: 6,
-    borderLeftWidth: 4,
-    borderLeftColor: '#ef4444',
-  },
-  errorText: {
-    color: '#991b1b',
-    fontSize: 14,
-    fontWeight: '500',
-  },
-  loader: {
-    flex: 1,
-    justifyContent: 'center',
+    marginBottom: 20,
   },
   listContainer: {
+    paddingBottom: 20,
+  },
+  doctorCard: {
+    backgroundColor: '#fff',
+    borderRadius: 12,
     padding: 15,
+    marginHorizontal: 15,
+    marginBottom: 15,
+    ...Platform.select({
+      android: { elevation: 3 },
+      ios: {
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.1,
+        shadowRadius: 4,
+      },
+      web: {
+        boxShadow: '0px 2px 4px rgba(0, 0, 0, 0.1)',
+      },
+    }),
+  },
+  doctorHeader: {
+    marginBottom: 10,
+  },
+  doctorHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 12,
+  },
+  doctorHeaderText: {
+    marginLeft: 12,
+    flex: 1,
+  },
+  doctorAvatar: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#e5e7eb',
+  },
+  doctorAvatarPlaceholder: {
+    justifyContent: 'center',
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+  },
+  avatarPlaceholderText: {
+    color: '#9ca3af',
+    fontWeight: '700',
+  },
+  doctorName: {
+    fontSize: 18,
+    fontWeight: 'bold',
+    color: '#333',
+  },
+  specialty: {
+    fontSize: 16,
+    color: '#2563eb',
+    fontWeight: '600',
+    marginTop: 4,
+  },
+  doctorInfo: {
+    marginBottom: 15,
+  },
+  fee: {
+    fontSize: 16,
+    color: '#333',
+  },
+  bookButton: {
+    backgroundColor: '#2563eb',
+    paddingVertical: 12,
+    borderRadius: 8,
+    alignItems: 'center',
+  },
+  bookButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 16,
+  },
+  appointmentsSection: {
+    marginTop: 20,
+    paddingHorizontal: 15,
+  },
+  appointmentsTitle: {
+    fontSize: 22,
+    fontWeight: 'bold',
+    color: '#333',
+    marginBottom: 15,
   },
   appointmentCard: {
     backgroundColor: '#fff',
     padding: 15,
     borderRadius: 8,
     marginBottom: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2563eb',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
   },
   cardHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     marginBottom: 8,
-  },
-  doctorName: {
-    fontSize: 18,
-    fontWeight: 'bold',
-    color: '#333',
   },
   status: {
     fontSize: 14,
@@ -535,92 +501,67 @@ const styles = StyleSheet.create({
   appointmentTime: {
     fontSize: 16,
     color: '#666',
-    marginBottom: 4,
-  },
-  sessionType: {
-    fontSize: 14,
-    color: '#888',
-    marginBottom: 4,
-  },
-  reason: {
-    fontSize: 14,
-    color: '#555',
     marginBottom: 10,
   },
   callButton: {
-    backgroundColor: '#2563eb',
+    backgroundColor: '#10b981',
     padding: 10,
     borderRadius: 6,
     alignItems: 'center',
+  },
+  appointmentActionsRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-start',
+    marginTop: 6,
+  },
+  smallButton: {
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 6,
+    marginRight: 10,
+  },
+  joinButton: {
+    backgroundColor: '#10b981',
+  },
+  cancelButton: {
+    backgroundColor: '#ef4444',
+  },
+  smallButtonText: {
+    color: '#fff',
+    fontWeight: '600',
   },
   buttonText: {
     color: '#fff',
     fontWeight: '600',
   },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: 20,
+  bucketTitle: {
+    fontSize: 20,
+    fontWeight: '700',
+    color: '#333',
+    marginTop: 10,
+    marginBottom: 8,
+  },
+  bucketEmpty: {
+    color: '#666',
+    fontSize: 14,
+    marginBottom: 10,
+    fontStyle: 'italic',
   },
   emptyText: {
-    fontSize: 16,
-    color: '#999',
-    marginBottom: 20,
-  },
-  bookButton: {
-    backgroundColor: '#2563eb',
-    paddingHorizontal: 30,
-    paddingVertical: 12,
-    borderRadius: 8,
-  },
-  // Doctors styles
-  doctorsHeader: {
-    padding: 20,
-    backgroundColor: '#fff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  doctorsTitle: {
-    fontSize: 24,
-    fontWeight: 'bold',
-    color: '#333',
-    marginBottom: 5,
-  },
-  doctorsSubtitle: {
-    fontSize: 16,
+    textAlign: 'center',
     color: '#666',
-  },
-  doctorCard: {
-    backgroundColor: '#fff',
-    padding: 15,
-    borderRadius: 8,
-    marginBottom: 10,
-    borderLeftWidth: 4,
-    borderLeftColor: '#2563eb',
-  },
-  doctorHeader: {
-    marginBottom: 10,
-  },
-  specialty: {
     fontSize: 16,
-    color: '#2563eb',
-    fontWeight: '600',
+    marginTop: 20,
   },
-  doctorInfo: {
-    marginBottom: 15,
+  errorContainer: {
+    backgroundColor: '#fee2e2',
+    padding: 12,
+    margin: 15,
+    borderRadius: 6,
   },
-  fee: {
-    fontSize: 16,
-    color: '#333',
-    marginBottom: 5,
-  },
-  availability: {
+  errorText: {
+    color: '#991b1b',
     fontSize: 14,
-    color: '#666',
-  },
-  bookButtonText: {
-    color: '#fff',
-    fontWeight: '600',
+    fontWeight: '500',
   },
 });
