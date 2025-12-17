@@ -2,6 +2,7 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PatientDashboard from '../screens/PatientDashboard';
 import DoctorDashboard from '../screens/DoctorDashboard';
+import MeetingScreen from '../screens/MeetingScreen';
 
 /**
  * App Stack - Rendered when user IS authenticated
@@ -12,7 +13,7 @@ export type AppStackParamList = {
   PatientDashboard: undefined;
   DoctorDashboard: undefined;
   AppointmentBooking?: { doctorId: string; doctorName: string };
-  VideoCall?: { roomName: string; appointmentId: string };
+  Meeting: { roomName: string; userName: string };
   Profile?: undefined;
   Prescriptions?: undefined;
 };
@@ -48,7 +49,11 @@ export default function AppNavigator() {
           headerShown: true,
         }}
       />
-      {/* Future screens: AppointmentBooking, VideoCall, Profile, Prescriptions */}
+      <Stack.Screen
+        name="Meeting"
+        component={MeetingScreen}
+        options={{ headerShown: false }}
+      />
     </Stack.Navigator>
   );
 }
