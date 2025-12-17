@@ -3,6 +3,7 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import PatientDashboard from '../screens/PatientDashboard';
 import DoctorDashboard from '../screens/DoctorDashboard';
 import MeetingScreen from '../screens/MeetingScreen';
+import BookAppointmentScreen from '../screens/BookAppointmentScreen';
 
 /**
  * App Stack - Rendered when user IS authenticated
@@ -12,7 +13,8 @@ import MeetingScreen from '../screens/MeetingScreen';
 export type AppStackParamList = {
   PatientDashboard: undefined;
   DoctorDashboard: undefined;
-  AppointmentBooking?: { doctorId: string; doctorName: string };
+  AppointmentBooking: undefined; // Renamed for consistency with implemented screen
+  BookAppointment: undefined;
   Meeting: { roomName: string; userName: string };
   Profile?: undefined;
   Prescriptions?: undefined;
@@ -53,6 +55,14 @@ export default function AppNavigator() {
         name="Meeting"
         component={MeetingScreen}
         options={{ headerShown: false }}
+      />
+      <Stack.Screen
+        name="BookAppointment"
+        component={BookAppointmentScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
       />
     </Stack.Navigator>
   );

@@ -190,6 +190,13 @@ export default function PatientDashboard({ navigation, route }: Props) {
           />
         )}
       </View>
+
+      <TouchableOpacity
+        style={styles.fab}
+        onPress={() => navigation.navigate('BookAppointment')}
+      >
+        <Text style={styles.fabText}>+</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -302,5 +309,26 @@ const styles = StyleSheet.create({
   emptySubtext: {
     fontSize: 14,
     color: '#999',
+  },
+  fab: {
+    position: 'absolute',
+    bottom: 24,
+    right: 24,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#667eea',
+    justifyContent: 'center',
+    alignItems: 'center',
+    elevation: 8,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+  },
+  fabText: {
+    fontSize: 32,
+    color: '#fff',
+    marginTop: -4, // Center slightly better visually
   },
 });
