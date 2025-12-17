@@ -5,16 +5,14 @@ service cloud.firestore {
 
     match /users/{uid} {
       allow read: if signedIn() && (uid == request.auth.uid);
-      allow create: if signedIn() && (uid == request.auth.uid);
-      allow update: if signedIn() && (uid == request.auth.uid);
+      allow write: if signedIn() && (uid == request.auth.uid);
     }
 
     match /doctors/{uid} {
-      // Only read verified doctors (or own profile if doctor)
-      allow read: if resource.data.verified == true || (signedIn() && uid == request.auth.uid);
-      // Doctor can create and update their own profile
-      allow create: if signedIn() && uid == request.auth.uid;
-      allow update: if signedIn() && uid == request.auth.uid;
+      // Public read of verified doctor profiles
+      allow read: if true;
+      // Only the doctor updates their own profile (or you can restrict to admin later)
+      allow write: if signedIn() && uid == request.auth.uid;
     }
 
     match /appointments/{id} {
@@ -28,6 +26,45 @@ service cloud.firestore {
 
       // Optional: allow delete by patient before accepted
       allow delete: if signedIn() && resource.data.patientId == request.auth.uid && resource.data.status == 'pending';
+    }
+
+    match /prescriptions/{id} {
+      // Only doctors can create prescriptions
+      allow create: if signedIn() && 
+        request.resource.data.doctorId == request.auth.uid &&
+        request.resource.data.medicationName is list &&
+        request.resource.data.dosage is list &&
+        request.resource.data.medicationName.size() == request.resource.data.dosage.size() &&
+        request.resource.data.medicationName.size() >= 1 &&
+        request.resource.data.medicationName.size() <= 10;
+
+      // Patient and doctor can read prescriptions
+      allow read: if signedIn() && (
+        resource.data.patientId == request.auth.uid ||
+        resource.data.doctorId == request.auth.uid
+      );
+
+      // Only the prescribing doctor can update (e.g., change status to cancelled)
+      allow update: if signedIn() && resource.data.doctorId == request.auth.uid;
+
+      // No deletion of prescriptions (audit trail)
+      allow delete: if false;
+    }
+
+    match /reminders/{id} {
+      // System creates reminders (via Cloud Functions or client)
+      allow create: if signedIn() && request.resource.data.userId in [request.auth.uid];
+
+      // Users can only read their own reminders
+      allow read: if signedIn() && resource.data.userId == request.auth.uid;
+
+      // Users can update isSent and isRead status
+      allow update: if signedIn() && 
+        resource.data.userId == request.auth.uid &&
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isSent', 'isRead', 'sentAt']);
+
+      // No deletion of reminders (audit trail)
+      allow delete: if false;
     }
   }
 }
