@@ -11,15 +11,18 @@ import {
     ActivityIndicator,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { RouteProp } from '@react-navigation/native'; // Added import
 import { AppStackParamList } from '../navigation/AppNavigator';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
 
-type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'AppointmentBooking'>;
+type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'BookAppointment'>;
+type RouteProps = RouteProp<AppStackParamList, 'BookAppointment'>; // Added type
 
 interface Props {
     navigation: NavigationProp;
+    route: RouteProps; // Added route prop
 }
 
 interface Doctor {
@@ -29,7 +32,7 @@ interface Doctor {
     email: string;
 }
 
-export default function BookAppointmentScreen({ navigation }: Props) {
+export default function BookAppointmentScreen({ navigation, route }: Props) { // Added route destructuring
     const [doctors, setDoctors] = useState<Doctor[]>([]);
     const [loading, setLoading] = useState(true);
     const [submitting, setSubmitting] = useState(false);
@@ -48,6 +51,16 @@ export default function BookAppointmentScreen({ navigation }: Props) {
         setTime('10:00');
         fetchDoctors();
     }, []);
+
+    // Effect to handle auto-selection from params once doctors are loaded
+    useEffect(() => {
+        if (route.params?.doctorId && doctors.length > 0) {
+            const preSelected = doctors.find(d => d.id === route.params?.doctorId);
+            if (preSelected) {
+                setSelectedDoctor(preSelected);
+            }
+        }
+    }, [route.params?.doctorId, doctors]);
 
     const fetchDoctors = async () => {
         try {

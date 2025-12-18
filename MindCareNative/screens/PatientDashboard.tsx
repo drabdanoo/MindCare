@@ -7,10 +7,12 @@ import {
   StyleSheet,
   RefreshControl,
   ActivityIndicator,
+  Image,
+  ScrollView,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
-import { collection, query, where, onSnapshot, orderBy, doc, getDoc } from 'firebase/firestore';
+import { collection, query, where, onSnapshot, orderBy, doc, getDoc, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
 import { auth, db } from '../config/firebase';
 import { AppStackParamList } from '../navigation/AppNavigator';
@@ -36,9 +38,17 @@ interface Appointment {
   createdAt: any;
 }
 
+interface Doctor {
+  id: string;
+  name: string;
+  specialization?: string;
+  email: string;
+}
+
 export default function PatientDashboard({ navigation, route }: Props) {
   const [userName, setUserName] = useState('');
   const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
 
@@ -63,6 +73,28 @@ export default function PatientDashboard({ navigation, route }: Props) {
     };
 
     fetchUserData();
+
+    const fetchDoctors = async () => {
+      try {
+        const q = query(collection(db, 'users'), where('role', '==', 'doctor'));
+        const querySnapshot = await getDocs(q);
+        const doctorsList: Doctor[] = [];
+        querySnapshot.forEach((doc) => {
+          const data = doc.data();
+          doctorsList.push({
+            id: doc.id,
+            name: data.name || data.fullName || 'Unknown Doctor',
+            email: data.email,
+            specialization: data.specialization || 'General',
+          });
+        });
+        setDoctors(doctorsList);
+      } catch (error) {
+        console.error('Error fetching doctors:', error);
+      }
+    };
+
+    fetchDoctors();
 
     // Real-time listener for appointments
     const appointmentsRef = collection(db, 'appointments');
@@ -138,6 +170,21 @@ export default function PatientDashboard({ navigation, route }: Props) {
     }
   };
 
+  const renderDoctorCard = ({ item }: { item: Doctor }) => (
+    <TouchableOpacity
+      style={styles.doctorCard}
+      onPress={() => navigation.navigate('BookAppointment', { doctorId: item.id })}
+    >
+      <Image
+        source={{ uri: `https://ui-avatars.com/api/?name=${encodeURIComponent(item.name)}&background=random` }}
+        style={styles.doctorImage}
+      />
+      <Text style={styles.doctorName} numberOfLines={1}>{item.name}</Text>
+      <Text style={styles.doctorSpeciality}>{item.specialization || 'General'}</Text>
+      <Text style={styles.doctorFee}>$50 / Visit</Text>
+    </TouchableOpacity>
+  );
+
   const renderAppointment = ({ item }: { item: Appointment }) => (
     <View style={styles.appointmentCard}>
       <View style={styles.cardHeader}>
@@ -172,6 +219,17 @@ export default function PatientDashboard({ navigation, route }: Props) {
       </View>
 
       <View style={styles.content}>
+        <Text style={styles.sectionTitle}>Find a Doctor</Text>
+        <FlatList
+          data={doctors}
+          renderItem={renderDoctorCard}
+          keyExtractor={(item) => item.id}
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.doctorList}
+          ListEmptyComponent={<Text style={styles.emptyText}>No doctors found.</Text>}
+        />
+
         <Text style={styles.sectionTitle}>My Appointments</Text>
         {appointments.length === 0 ? (
           <View style={styles.emptyContainer}>
@@ -330,5 +388,47 @@ const styles = StyleSheet.create({
     fontSize: 32,
     color: '#fff',
     marginTop: -4, // Center slightly better visually
+  },
+  doctorList: {
+    paddingBottom: 16,
+    marginBottom: 8,
+  },
+  doctorCard: {
+    backgroundColor: '#fff',
+    padding: 12,
+    borderRadius: 12,
+    marginRight: 12,
+    width: 140,
+    alignItems: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 3,
+  },
+  doctorImage: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
+    marginBottom: 8,
+    backgroundColor: '#f0f0f0',
+  },
+  doctorName: {
+    fontSize: 14,
+    fontWeight: 'bold',
+    color: '#333',
+    textAlign: 'center',
+    marginBottom: 2,
+  },
+  doctorSpeciality: {
+    fontSize: 12,
+    color: '#666',
+    textAlign: 'center',
+    marginBottom: 4,
+  },
+  doctorFee: {
+    fontSize: 12,
+    color: '#10b981',
+    fontWeight: '600',
   },
 });

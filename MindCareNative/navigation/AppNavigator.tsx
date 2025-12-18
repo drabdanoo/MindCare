@@ -14,7 +14,7 @@ export type AppStackParamList = {
   PatientDashboard: undefined;
   DoctorDashboard: undefined;
   AppointmentBooking: undefined; // Renamed for consistency with implemented screen
-  BookAppointment: undefined;
+  BookAppointment: { doctorId?: string } | undefined;
   Meeting: { roomName: string; userName: string };
   Profile?: undefined;
   Prescriptions?: undefined;
