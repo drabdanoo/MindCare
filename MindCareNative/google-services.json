@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "186502746330",
+    "project_id": "mindcareapp-209c7",
+    "storage_bucket": "mindcareapp-209c7.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:186502746330:android:a3b623082a4a76b09555e3",
+        "android_client_info": {
+          "package_name": "com.abdullah.mindcareapp"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "186502746330-ntn42hst05o4ih5ol0ijc36nv0vvl1bh.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.abdullah.mindcareapp",
+            "certificate_hash": "1f38f686d9f68f0fd967c4d08ded27d04cc6c6d4"
+          }
+        },
+        {
+          "client_id": "186502746330-0tlvu4av531sbbngocds8qnsf95ahhe2.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDmJDIViCAvN3dN0AFocGh5q6UCmV7oIEI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "186502746330-0tlvu4av531sbbngocds8qnsf95ahhe2.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
