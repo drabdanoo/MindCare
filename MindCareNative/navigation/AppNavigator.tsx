@@ -5,6 +5,8 @@ import DoctorDashboard from '../screens/DoctorDashboard';
 import MeetingScreen from '../screens/MeetingScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
 import PaymentScreen from '../screens/PaymentScreen';
+import WritePrescriptionScreen from '../screens/WritePrescriptionScreen';
+import PrescriptionsScreen from '../screens/PrescriptionsScreen';
 
 /**
  * App Stack - Rendered when user IS authenticated
@@ -23,8 +25,16 @@ export type AppStackParamList = {
     date: string;
     time: string;
   };
+  WritePrescription: {
+    appointmentId: string;
+    patientId: string;
+    patientName: string;
+  };
+  Prescriptions: {
+    patientId: string;
+    role: 'patient' | 'doctor';
+  };
   Profile?: undefined;
-  Prescriptions?: undefined;
 };
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
@@ -78,6 +88,19 @@ export default function AppNavigator() {
           presentation: 'modal',
           headerShown: false,
         }}
+      />
+      <Stack.Screen
+        name="WritePrescription"
+        component={WritePrescriptionScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="Prescriptions"
+        component={PrescriptionsScreen}
+        options={{ headerShown: false }}
       />
     </Stack.Navigator>
   );

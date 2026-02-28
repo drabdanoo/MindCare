@@ -255,9 +255,22 @@ export default function PatientDashboard({ navigation, route }: Props) {
           <Text style={styles.welcomeText}>Welcome back,</Text>
           <Text style={styles.userName}>{userName}</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.prescriptionsLink}
+            onPress={() =>
+              navigation.navigate('Prescriptions', {
+                patientId: userId || '',
+                role: 'patient',
+              })
+            }
+          >
+            <Text style={styles.prescriptionsLinkText}>My Rx</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -496,5 +509,21 @@ const styles = StyleSheet.create({
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  prescriptionsLink: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  prescriptionsLinkText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
   },
 });

@@ -235,6 +235,21 @@ export default function DoctorDashboard({ navigation, route }: Props) {
           <Text style={styles.actionButtonText}>Mark as Completed</Text>
         </TouchableOpacity>
       )}
+
+      {item.status === 'completed' && (
+        <TouchableOpacity
+          style={[styles.actionButton, styles.prescriptionButton]}
+          onPress={() =>
+            navigation.navigate('WritePrescription', {
+              appointmentId: item.id,
+              patientId: item.patientId,
+              patientName: item.patientName,
+            })
+          }
+        >
+          <Text style={styles.actionButtonText}>Write Prescription</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 
@@ -253,9 +268,22 @@ export default function DoctorDashboard({ navigation, route }: Props) {
           <Text style={styles.welcomeText}>Dr. {userName}</Text>
           <Text style={styles.subtitle}>Your Appointments</Text>
         </View>
-        <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
-          <Text style={styles.logoutText}>Logout</Text>
-        </TouchableOpacity>
+        <View style={styles.headerActions}>
+          <TouchableOpacity
+            style={styles.prescriptionsLink}
+            onPress={() =>
+              navigation.navigate('Prescriptions', {
+                patientId: userId || '',
+                role: 'doctor',
+              })
+            }
+          >
+            <Text style={styles.prescriptionsLinkText}>Prescriptions</Text>
+          </TouchableOpacity>
+          <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
+            <Text style={styles.logoutText}>Logout</Text>
+          </TouchableOpacity>
+        </View>
       </View>
 
       <View style={styles.content}>
@@ -435,6 +463,26 @@ const styles = StyleSheet.create({
   completeButton: {
     backgroundColor: '#6366f1',
     marginTop: 8,
+  },
+  prescriptionButton: {
+    backgroundColor: '#667eea',
+    marginTop: 8,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  prescriptionsLink: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  prescriptionsLinkText: {
+    color: '#fff',
+    fontWeight: '600',
+    fontSize: 13,
   },
   actionButtonText: {
     color: '#fff',
