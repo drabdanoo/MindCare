@@ -267,6 +267,12 @@ export default function PatientDashboard({ navigation, route }: Props) {
           >
             <Text style={styles.prescriptionsLinkText}>My Rx</Text>
           </TouchableOpacity>
+          <TouchableOpacity
+            style={styles.prescriptionsLink}
+            onPress={() => navigation.navigate('Profile')}
+          >
+            <Text style={styles.prescriptionsLinkText}>Profile</Text>
+          </TouchableOpacity>
           <TouchableOpacity style={styles.logoutButton} onPress={handleLogout}>
             <Text style={styles.logoutText}>Logout</Text>
           </TouchableOpacity>
