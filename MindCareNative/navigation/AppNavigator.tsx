@@ -4,6 +4,7 @@ import PatientDashboard from '../screens/PatientDashboard';
 import DoctorDashboard from '../screens/DoctorDashboard';
 import MeetingScreen from '../screens/MeetingScreen';
 import BookAppointmentScreen from '../screens/BookAppointmentScreen';
+import PaymentScreen from '../screens/PaymentScreen';
 
 /**
  * App Stack - Rendered when user IS authenticated
@@ -16,6 +17,12 @@ export type AppStackParamList = {
   AppointmentBooking: undefined; // Renamed for consistency with implemented screen
   BookAppointment: { doctorId?: string } | undefined;
   Meeting: { roomName: string; userName: string };
+  PaymentScreen: {
+    appointmentId: string;
+    doctorName: string;
+    date: string;
+    time: string;
+  };
   Profile?: undefined;
   Prescriptions?: undefined;
 };
@@ -59,6 +66,14 @@ export default function AppNavigator() {
       <Stack.Screen
         name="BookAppointment"
         component={BookAppointmentScreen}
+        options={{
+          presentation: 'modal',
+          headerShown: false,
+        }}
+      />
+      <Stack.Screen
+        name="PaymentScreen"
+        component={PaymentScreen}
         options={{
           presentation: 'modal',
           headerShown: false,

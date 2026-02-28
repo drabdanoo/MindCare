@@ -33,6 +33,9 @@ interface Appointment {
   time: string;
   reason: string;
   status: string;
+  paymentStatus?: 'unpaid' | 'pending_verification' | 'confirmed';
+  paymentMethodName?: string;
+  paymentNote?: string;
   createdAt: any;
 }
 
@@ -108,6 +111,20 @@ export default function DoctorDashboard({ navigation, route }: Props) {
     }
   };
 
+  const handleConfirmPayment = async (appointmentId: string) => {
+    try {
+      await updateDoc(doc(db, 'appointments', appointmentId), {
+        paymentStatus: 'confirmed',
+        paymentConfirmedAt: new Date(),
+      });
+      showSuccessToast('Payment confirmed');
+    } catch (error: any) {
+      console.error('Error confirming payment:', error);
+      captureException(error);
+      showErrorToast('Failed to confirm payment');
+    }
+  };
+
   const handleLogout = async () => {
     try {
       await signOut(auth);
@@ -163,6 +180,35 @@ export default function DoctorDashboard({ navigation, route }: Props) {
 
       <Text style={styles.reasonLabel}>Reason:</Text>
       <Text style={styles.reasonText}>{item.reason}</Text>
+
+      {/* Payment section */}
+      {item.paymentStatus === 'pending_verification' && (
+        <View style={styles.paymentSection}>
+          <View style={styles.paymentInfoRow}>
+            <View style={styles.paymentPendingBadge}>
+              <Text style={styles.paymentPendingText}>PAYMENT PENDING VERIFICATION</Text>
+            </View>
+          </View>
+          {item.paymentMethodName && (
+            <Text style={styles.paymentDetail}>Method: {item.paymentMethodName}</Text>
+          )}
+          {item.paymentNote && (
+            <Text style={styles.paymentDetail}>Reference: {item.paymentNote}</Text>
+          )}
+          <TouchableOpacity
+            style={styles.confirmPaymentButton}
+            onPress={() => handleConfirmPayment(item.id)}
+          >
+            <Text style={styles.confirmPaymentText}>Confirm Payment Received</Text>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {item.paymentStatus === 'confirmed' && (
+        <View style={styles.paymentConfirmedBadge}>
+          <Text style={styles.paymentConfirmedText}>PAYMENT CONFIRMED</Text>
+        </View>
+      )}
 
       {item.status === 'pending' && (
         <View style={styles.actionsContainer}>
@@ -405,5 +451,60 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: '600',
     color: '#666',
+  },
+  paymentSection: {
+    marginTop: 12,
+    paddingTop: 12,
+    borderTopWidth: 1,
+    borderTopColor: '#f0f0f0',
+  },
+  paymentInfoRow: {
+    flexDirection: 'row',
+    marginBottom: 6,
+  },
+  paymentPendingBadge: {
+    backgroundColor: '#fff7ed',
+    borderWidth: 1,
+    borderColor: '#f59e0b',
+    borderRadius: 6,
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+  },
+  paymentPendingText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#b45309',
+  },
+  paymentDetail: {
+    fontSize: 13,
+    color: '#555',
+    marginBottom: 3,
+  },
+  confirmPaymentButton: {
+    backgroundColor: '#10b981',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 10,
+  },
+  confirmPaymentText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 14,
+  },
+  paymentConfirmedBadge: {
+    alignSelf: 'flex-start',
+    backgroundColor: '#dcfce7',
+    borderWidth: 1,
+    borderColor: '#10b981',
+    borderRadius: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    marginTop: 10,
+  },
+  paymentConfirmedText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#065f46',
   },
 });

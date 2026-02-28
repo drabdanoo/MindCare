@@ -30,11 +30,14 @@ interface Props {
 interface Appointment {
   id: string;
   doctorId: string;
+  doctorName: string;
   patientName: string;
   date: string;
   time: string;
   reason: string;
   status: string;
+  paymentStatus?: 'unpaid' | 'pending_verification' | 'confirmed';
+  paymentMethodName?: string;
   createdAt: any;
 }
 
@@ -185,18 +188,57 @@ export default function PatientDashboard({ navigation, route }: Props) {
     </TouchableOpacity>
   );
 
-  const renderAppointment = ({ item }: { item: Appointment }) => (
-    <View style={styles.appointmentCard}>
-      <View style={styles.cardHeader}>
-        <Text style={styles.appointmentDate}>{item.date}</Text>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
-          <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+  const getPaymentBadge = (paymentStatus?: string) => {
+    switch (paymentStatus) {
+      case 'pending_verification':
+        return { label: 'PAYMENT PENDING', color: '#f59e0b' };
+      case 'confirmed':
+        return { label: 'PAID', color: '#10b981' };
+      default:
+        return null;
+    }
+  };
+
+  const renderAppointment = ({ item }: { item: Appointment }) => {
+    const paymentBadge = getPaymentBadge(item.paymentStatus);
+    const showPayButton =
+      item.status === 'accepted' && !item.paymentStatus || item.paymentStatus === 'unpaid';
+
+    return (
+      <View style={styles.appointmentCard}>
+        <View style={styles.cardHeader}>
+          <Text style={styles.appointmentDate}>{item.date}</Text>
+          <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) }]}>
+            <Text style={styles.statusText}>{item.status.toUpperCase()}</Text>
+          </View>
         </View>
+        <Text style={styles.appointmentTime}>Time: {item.time}</Text>
+        <Text style={styles.appointmentReason}>Reason: {item.reason}</Text>
+
+        {paymentBadge && (
+          <View style={[styles.paymentBadge, { backgroundColor: paymentBadge.color }]}>
+            <Text style={styles.paymentBadgeText}>{paymentBadge.label}</Text>
+          </View>
+        )}
+
+        {showPayButton && (
+          <TouchableOpacity
+            style={styles.payButton}
+            onPress={() =>
+              navigation.navigate('PaymentScreen', {
+                appointmentId: item.id,
+                doctorName: item.doctorName || 'Doctor',
+                date: item.date,
+                time: item.time,
+              })
+            }
+          >
+            <Text style={styles.payButtonText}>Pay Now</Text>
+          </TouchableOpacity>
+        )}
       </View>
-      <Text style={styles.appointmentTime}>Time: {item.time}</Text>
-      <Text style={styles.appointmentReason}>Reason: {item.reason}</Text>
-    </View>
-  );
+    );
+  };
 
   if (loading) {
     return (
@@ -430,5 +472,29 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: '#10b981',
     fontWeight: '600',
+  },
+  paymentBadge: {
+    alignSelf: 'flex-start',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+    marginTop: 8,
+  },
+  paymentBadgeText: {
+    fontSize: 11,
+    fontWeight: '700',
+    color: '#fff',
+  },
+  payButton: {
+    backgroundColor: '#667eea',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 12,
+  },
+  payButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
   },
 });

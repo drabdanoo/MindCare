@@ -125,6 +125,7 @@ export default function BookAppointmentScreen({ navigation, route }: Props) { //
                 time,
                 reason,
                 status: 'pending',
+                paymentStatus: 'unpaid',
                 createdAt: new Date(),
             });
 
