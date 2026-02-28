@@ -14,10 +14,12 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native';
 import { collection, query, where, onSnapshot, orderBy, doc, getDoc, getDocs } from 'firebase/firestore';
 import { signOut } from 'firebase/auth';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { auth, db } from '../config/firebase';
 import { AppStackParamList } from '../navigation/AppNavigator';
 import { showErrorToast, showSuccessToast, showInfoToast } from '../utils/toast';
 import { captureException } from '../config/sentry';
+import { scheduleAppointmentReminder, cancelNotification } from '../utils/notifications';
 
 type PatientDashboardNavigationProp = NativeStackNavigationProp<AppStackParamList, 'PatientDashboard'>;
 type PatientDashboardRouteProp = RouteProp<AppStackParamList, 'PatientDashboard'>;
@@ -129,6 +131,65 @@ export default function PatientDashboard({ navigation, route }: Props) {
 
     return () => unsubscribe();
   }, [userId]);
+
+  // Schedule/cancel local reminders as appointment statuses change
+  useEffect(() => {
+    if (appointments.length === 0) return;
+
+    const processReminders = async () => {
+      const stored = await AsyncStorage.getItem('mindcare_appointment_reminders');
+      const reminders: Record<string, string> = stored ? JSON.parse(stored) : {};
+      let changed = false;
+
+      for (const appt of appointments) {
+        if (appt.status === 'accepted' && !reminders[appt.id]) {
+          // Parse "YYYY-MM-DD" + "HH:MM AM/PM" into a Date
+          const base = new Date(appt.date + 'T00:00:00');
+          const match = appt.time.trim().match(/^(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM)?$/i);
+          if (match) {
+            let hours = parseInt(match[1], 10);
+            const minutes = parseInt(match[2], 10);
+            const ampm = match[3]?.toUpperCase();
+            if (ampm === 'PM' && hours !== 12) hours += 12;
+            if (ampm === 'AM' && hours === 12) hours = 0;
+            base.setHours(hours, minutes, 0, 0);
+          }
+          const reminderTime = new Date(base.getTime() - 60 * 60 * 1000); // 1 hour before
+          if (reminderTime > new Date()) {
+            try {
+              const notifId = await scheduleAppointmentReminder(
+                appt.id,
+                'Appointment Reminder',
+                `Your appointment is in 1 hour. Please get ready!`,
+                reminderTime
+              );
+              reminders[appt.id] = notifId;
+              changed = true;
+            } catch (e) {
+              console.warn('Could not schedule reminder:', e);
+            }
+          }
+        } else if (
+          (appt.status === 'declined' || appt.status === 'completed') &&
+          reminders[appt.id]
+        ) {
+          try {
+            await cancelNotification(reminders[appt.id]);
+          } catch (e) {
+            console.warn('Could not cancel reminder:', e);
+          }
+          delete reminders[appt.id];
+          changed = true;
+        }
+      }
+
+      if (changed) {
+        await AsyncStorage.setItem('mindcare_appointment_reminders', JSON.stringify(reminders));
+      }
+    };
+
+    processReminders();
+  }, [appointments]);
 
   const handleLogout = async () => {
     try {

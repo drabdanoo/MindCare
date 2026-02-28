@@ -53,7 +53,10 @@ export const scheduleAppointmentReminder = async (
       sound: true,
       priority: Notifications.AndroidNotificationPriority.HIGH,
     },
-    trigger: triggerDate,
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: triggerDate,
+    },
   });
   
   return identifier;
