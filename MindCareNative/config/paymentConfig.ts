@@ -24,13 +24,13 @@ export const PAYMENT_CONFIG = {
     {
       id: 'zaincash',
       name: 'ZainCash',
-      number: '0770-000-0000', // *** REPLACE WITH YOUR ZAINCASH NUMBER ***
+      number: '07717676562', // *** REPLACE WITH YOUR ZAINCASH NUMBER ***
       instructions: 'Open ZainCash → Send Money → enter number above',
     },
     {
       id: 'asiacell',
       name: 'Asiacell Hawala',
-      number: '0750-000-0000', // *** REPLACE WITH YOUR ASIACELL NUMBER ***
+      number: '07717676562', // *** REPLACE WITH YOUR ASIACELL NUMBER ***
       instructions: 'Open Asiacell Hawala → Transfer → enter number above',
     },
     {
