@@ -228,12 +228,25 @@ export default function DoctorDashboard({ navigation, route }: Props) {
       )}
 
       {item.status === 'accepted' && (
-        <TouchableOpacity
-          style={[styles.actionButton, styles.completeButton]}
-          onPress={() => handleStatusUpdate(item.id, 'completed')}
-        >
-          <Text style={styles.actionButtonText}>Mark as Completed</Text>
-        </TouchableOpacity>
+        <View style={styles.actionsContainer}>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.callButton]}
+            onPress={() =>
+              navigation.navigate('Meeting', {
+                roomName: `mindcare-${item.id}`,
+                userName: `Dr. ${userName}`,
+              })
+            }
+          >
+            <Text style={styles.actionButtonText}>Start Call</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.actionButton, styles.completeButton]}
+            onPress={() => handleStatusUpdate(item.id, 'completed')}
+          >
+            <Text style={styles.actionButtonText}>Complete</Text>
+          </TouchableOpacity>
+        </View>
       )}
 
       {item.status === 'completed' && (
@@ -466,9 +479,11 @@ const styles = StyleSheet.create({
   declineButton: {
     backgroundColor: '#ef4444',
   },
+  callButton: {
+    backgroundColor: '#10b981',
+  },
   completeButton: {
     backgroundColor: '#6366f1',
-    marginTop: 8,
   },
   prescriptionButton: {
     backgroundColor: '#667eea',

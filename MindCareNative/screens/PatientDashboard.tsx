@@ -297,6 +297,20 @@ export default function PatientDashboard({ navigation, route }: Props) {
             <Text style={styles.payButtonText}>Pay Now</Text>
           </TouchableOpacity>
         )}
+
+        {item.status === 'accepted' && (
+          <TouchableOpacity
+            style={styles.callButton}
+            onPress={() =>
+              navigation.navigate('Meeting', {
+                roomName: `mindcare-${item.id}`,
+                userName: userName || 'Patient',
+              })
+            }
+          >
+            <Text style={styles.callButtonText}>Start Call</Text>
+          </TouchableOpacity>
+        )}
       </View>
     );
   };
@@ -573,6 +587,18 @@ const styles = StyleSheet.create({
     marginTop: 12,
   },
   payButtonText: {
+    color: '#fff',
+    fontWeight: 'bold',
+    fontSize: 15,
+  },
+  callButton: {
+    backgroundColor: '#10b981',
+    borderRadius: 8,
+    paddingVertical: 10,
+    alignItems: 'center',
+    marginTop: 8,
+  },
+  callButtonText: {
     color: '#fff',
     fontWeight: 'bold',
     fontSize: 15,
