@@ -115,8 +115,21 @@ export default function BookAppointmentScreen({ navigation, route }: Props) { //
 
         setSubmitting(true);
         try {
-            // Fetch the patient's real name from Firestore (displayName may not be set on older accounts)
-            const patientDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            // Fetch patient name + re-verify doctor in parallel
+            const [patientDoc, doctorDoc] = await Promise.all([
+                getDoc(doc(db, 'users', auth.currentUser.uid)),
+                getDoc(doc(db, 'users', selectedDoctor!.id)),
+            ]);
+
+            // Guard: doctor must still exist and be verified at booking time
+            // (covers bypassing the UI via navigation params or stale state)
+            const doctorData = doctorDoc.data();
+            if (!doctorDoc.exists() || doctorData?.role !== 'doctor' || doctorData?.isVerified !== true) {
+                showErrorToast('This doctor is not available for booking');
+                setSubmitting(false);
+                return;
+            }
+
             const patientName =
                 patientDoc.data()?.name ||
                 patientDoc.data()?.fullName ||
