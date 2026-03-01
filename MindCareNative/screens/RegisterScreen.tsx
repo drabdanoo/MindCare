@@ -13,7 +13,7 @@ import {
 import { Picker } from '@react-native-picker/picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../navigation/AuthNavigator';
-import { createUserWithEmailAndPassword } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
 import { doc, setDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
@@ -75,12 +75,17 @@ export default function RegisterScreen({ navigation }: Props) {
       const userCredential = await createUserWithEmailAndPassword(auth, email.trim(), password);
       const user = userCredential.user;
 
+      // Set displayName on the Auth profile so it's available across the app
+      await updateProfile(user, { displayName: fullName.trim() });
+
       // Save user data to Firestore
       await setDoc(doc(db, 'users', user.uid), {
         fullName: fullName.trim(),
         name: fullName.trim(), // For compatibility with both name fields
         email: email.trim().toLowerCase(),
         role,
+        // Doctors must be approved by an admin before appearing to patients
+        ...(role === 'doctor' && { isVerified: false }),
         createdAt: new Date().toISOString(),
       });
 

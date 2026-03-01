@@ -76,7 +76,7 @@ export default function PatientDashboard({ navigation, route }: Props) {
 
     const fetchDoctors = async () => {
       try {
-        const q = query(collection(db, 'users'), where('role', '==', 'doctor'));
+        const q = query(collection(db, 'users'), where('role', '==', 'doctor'), where('isVerified', '==', true));
         const querySnapshot = await getDocs(q);
         const doctorsList: Doctor[] = [];
         querySnapshot.forEach((doc) => {

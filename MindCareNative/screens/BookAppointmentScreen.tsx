@@ -13,7 +13,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native'; // Added import
 import { AppStackParamList } from '../navigation/AppNavigator';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
 
@@ -64,8 +64,7 @@ export default function BookAppointmentScreen({ navigation, route }: Props) { //
 
     const fetchDoctors = async () => {
         try {
-            // Create a query against the collection.
-            const q = query(collection(db, 'users'), where('role', '==', 'doctor'));
+            const q = query(collection(db, 'users'), where('role', '==', 'doctor'), where('isVerified', '==', true));
             const querySnapshot = await getDocs(q);
             const doctorsList: Doctor[] = [];
             querySnapshot.forEach((doc) => {
@@ -116,9 +115,17 @@ export default function BookAppointmentScreen({ navigation, route }: Props) { //
 
         setSubmitting(true);
         try {
+            // Fetch the patient's real name from Firestore (displayName may not be set on older accounts)
+            const patientDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            const patientName =
+                patientDoc.data()?.name ||
+                patientDoc.data()?.fullName ||
+                auth.currentUser.displayName ||
+                'Patient';
+
             await addDoc(collection(db, 'appointments'), {
                 patientId: auth.currentUser.uid,
-                patientName: auth.currentUser.displayName || 'Patient', // In a real app, fetch actual profile name
+                patientName,
                 doctorId: selectedDoctor?.id,
                 doctorName: selectedDoctor?.name,
                 date,

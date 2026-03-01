@@ -37,8 +37,8 @@ export default function RootNavigator() {
             setUserRole(role);
           }
           
-          // Set Sentry user context
-          setUserContext(currentUser.uid, currentUser.email || undefined, userRole || undefined);
+          // Set Sentry user context (use local `role`, not stale state)
+          setUserContext(currentUser.uid, currentUser.email || undefined, role);
         } catch (error) {
           console.error('Error fetching user data:', error);
         }
@@ -70,7 +70,7 @@ export default function RootNavigator() {
         <AuthNavigator />
       ) : (
         // User authenticated → Show AppStack (Dashboards/Features)
-        <AppNavigator />
+        <AppNavigator userRole={userRole} />
       )}
     </NavigationContainer>
   );
