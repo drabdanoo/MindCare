@@ -3,9 +3,23 @@ service cloud.firestore {
   match /databases/{db}/documents {
     function signedIn() { return request.auth != null; }
 
+    // Verify caller has doctor role in users collection
+    function isDoctor() {
+      return get(/databases/$(db)/documents/users/$(request.auth.uid)).data.role == 'doctor';
+    }
+
     match /users/{uid} {
-      allow read: if signedIn() && (uid == request.auth.uid);
-      allow write: if signedIn() && (uid == request.auth.uid);
+      allow read: if signedIn() && uid == request.auth.uid;
+
+      // At registration: role must be 'patient' — doctors are created via admin SDK only
+      allow create: if signedIn() && uid == request.auth.uid
+        && request.resource.data.role == 'patient';
+
+      // Profile updates: role field can never be changed by the user
+      allow update: if signedIn() && uid == request.auth.uid
+        && !('role' in request.resource.data.diff(resource.data).affectedKeys())
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['fullName', 'name', 'phone', 'specialization', 'bio', 'updatedAt']);
     }
 
     match /doctors/{uid} {
@@ -18,25 +32,41 @@ service cloud.firestore {
     match /appointments/{id} {
       allow create: if signedIn() && request.resource.data.patientId == request.auth.uid;
 
-      // Patient can see/update their own; Doctor can see/update theirs
-      allow read, update: if signedIn() && (
+      // Patient can see their own; Doctor can see theirs
+      allow read: if signedIn() && (
           resource.data.patientId == request.auth.uid ||
           resource.data.doctorId == request.auth.uid
       );
 
-      // Optional: allow delete by patient before accepted
-      allow delete: if signedIn() && resource.data.patientId == request.auth.uid && resource.data.status == 'pending';
+      // Patient can only update payment-related fields
+      allow update: if signedIn()
+        && resource.data.patientId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['paymentStatus', 'paymentMethod', 'paymentMethodName',
+                      'paymentNote', 'paymentSubmittedAt']);
+
+      // Doctor can only update appointment status
+      allow update: if signedIn()
+        && resource.data.doctorId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys()
+            .hasOnly(['status', 'updatedAt']);
+
+      // Patient can cancel a pending appointment
+      allow delete: if signedIn()
+        && resource.data.patientId == request.auth.uid
+        && resource.data.status == 'pending';
     }
 
     match /prescriptions/{id} {
-      // Only doctors can create prescriptions
-      allow create: if signedIn() && 
-        request.resource.data.doctorId == request.auth.uid &&
-        request.resource.data.medicationName is list &&
-        request.resource.data.dosage is list &&
-        request.resource.data.medicationName.size() == request.resource.data.dosage.size() &&
-        request.resource.data.medicationName.size() >= 1 &&
-        request.resource.data.medicationName.size() <= 10;
+      // Only users with role == 'doctor' can create prescriptions
+      allow create: if signedIn()
+        && isDoctor()
+        && request.resource.data.doctorId == request.auth.uid
+        && request.resource.data.medicationName is list
+        && request.resource.data.dosage is list
+        && request.resource.data.medicationName.size() == request.resource.data.dosage.size()
+        && request.resource.data.medicationName.size() >= 1
+        && request.resource.data.medicationName.size() <= 10;
 
       // Patient and doctor can read prescriptions
       allow read: if signedIn() && (
@@ -58,10 +88,10 @@ service cloud.firestore {
       // Users can only read their own reminders
       allow read: if signedIn() && resource.data.userId == request.auth.uid;
 
-      // Users can update isSent and isRead status
-      allow update: if signedIn() && 
-        resource.data.userId == request.auth.uid &&
-        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isSent', 'isRead', 'sentAt']);
+      // Users can update isSent and isRead status only
+      allow update: if signedIn()
+        && resource.data.userId == request.auth.uid
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['isSent', 'isRead', 'sentAt']);
 
       // No deletion of reminders (audit trail)
       allow delete: if false;

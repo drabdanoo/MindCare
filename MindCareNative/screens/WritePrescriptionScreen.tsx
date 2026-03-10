@@ -75,8 +75,20 @@ export default function WritePrescriptionScreen({ navigation, route }: Props) {
             Alert.alert('Too short', 'Instructions must be at least 10 characters.');
             return false;
         }
+        if (instructions.trim().length > 1000) {
+            Alert.alert('Too long', 'Instructions must be 1000 characters or less.');
+            return false;
+        }
         if (!duration.trim()) {
             Alert.alert('Missing field', 'Please enter the treatment duration.');
+            return false;
+        }
+        if (duration.trim().length > 50) {
+            Alert.alert('Too long', 'Duration must be 50 characters or less.');
+            return false;
+        }
+        if (notes.trim().length > 500) {
+            Alert.alert('Too long', 'Notes must be 500 characters or less.');
             return false;
         }
         const refillNum = parseInt(refills, 10);
@@ -184,6 +196,7 @@ export default function WritePrescriptionScreen({ navigation, route }: Props) {
                     multiline
                     numberOfLines={4}
                     textAlignVertical="top"
+                    maxLength={1000}
                 />
 
                 {/* Duration & Refills */}
@@ -196,6 +209,7 @@ export default function WritePrescriptionScreen({ navigation, route }: Props) {
                             placeholderTextColor="#aaa"
                             value={duration}
                             onChangeText={setDuration}
+                            maxLength={50}
                         />
                     </View>
                     <View style={styles.halfField}>
@@ -223,6 +237,7 @@ export default function WritePrescriptionScreen({ navigation, route }: Props) {
                     multiline
                     numberOfLines={2}
                     textAlignVertical="top"
+                    maxLength={500}
                 />
 
                 {/* Submit */}

@@ -49,9 +49,9 @@ export default function PrescriptionsScreen({ navigation, route }: Props) {
         const userId = auth.currentUser?.uid;
         if (!userId) return;
 
-        // Doctors see prescriptions they wrote; patients see their own
+        // Always query by the authenticated user's own UID — never trust route params for security
         const field = role === 'doctor' ? 'doctorId' : 'patientId';
-        const id = role === 'doctor' ? userId : patientId;
+        const id = userId;
 
         const q = query(
             collection(db, 'prescriptions'),

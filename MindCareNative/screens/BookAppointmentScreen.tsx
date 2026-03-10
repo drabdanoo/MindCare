@@ -13,7 +13,7 @@ import {
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RouteProp } from '@react-navigation/native'; // Added import
 import { AppStackParamList } from '../navigation/AppNavigator';
-import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
+import { collection, query, where, getDocs, addDoc, doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
 
@@ -107,6 +107,10 @@ export default function BookAppointmentScreen({ navigation, route }: Props) { //
             Alert.alert('Error', 'Please enter a reason for the appointment');
             return false;
         }
+        if (reason.trim().length > 500) {
+            Alert.alert('Error', 'Reason must be 500 characters or less');
+            return false;
+        }
         return true;
     };
 
@@ -116,9 +120,15 @@ export default function BookAppointmentScreen({ navigation, route }: Props) { //
 
         setSubmitting(true);
         try {
+            // Fetch the real profile name — displayName is not set for email/password auth
+            const userSnap = await getDoc(doc(db, 'users', auth.currentUser.uid));
+            const patientName = userSnap.exists()
+                ? (userSnap.data().fullName || userSnap.data().name || 'Patient')
+                : 'Patient';
+
             await addDoc(collection(db, 'appointments'), {
                 patientId: auth.currentUser.uid,
-                patientName: auth.currentUser.displayName || 'Patient', // In a real app, fetch actual profile name
+                patientName,
                 doctorId: selectedDoctor?.id,
                 doctorName: selectedDoctor?.name,
                 date,
@@ -219,6 +229,7 @@ export default function BookAppointmentScreen({ navigation, route }: Props) { //
                         placeholder="Describe your symptoms..."
                         multiline
                         numberOfLines={3}
+                        maxLength={500}
                     />
                 </View>
 
