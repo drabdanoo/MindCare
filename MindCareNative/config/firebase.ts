@@ -3,6 +3,7 @@ import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/aut
 import { getFirestore } from 'firebase/firestore';
 import { Platform } from 'react-native';
 import Constants from 'expo-constants';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const firebaseConfig = {
   apiKey: Constants.expoConfig?.extra?.firebaseApiKey || process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
@@ -15,20 +16,14 @@ const firebaseConfig = {
 
 const app = initializeApp(firebaseConfig);
 
-// On native: persist auth tokens in SecureStore (OS-level encrypted storage)
+// On native: persist auth state via AsyncStorage (Expo SDK 54 compatible)
 // On web: use Firebase default (IndexedDB / localStorage)
 function buildAuth() {
   if (Platform.OS === 'web') {
     return getAuth(app);
   }
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const SecureStore = require('expo-secure-store');
   return initializeAuth(app, {
-    persistence: getReactNativePersistence({
-      getItem: (key: string) => SecureStore.getItemAsync(key),
-      setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
-      removeItem: (key: string) => SecureStore.deleteItemAsync(key),
-    }),
+    persistence: getReactNativePersistence(AsyncStorage),
   });
 }
 
