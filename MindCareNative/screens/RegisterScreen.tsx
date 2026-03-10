@@ -10,7 +10,6 @@ import {
   ScrollView,
   ActivityIndicator,
 } from 'react-native';
-import { Picker } from '@react-native-picker/picker';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { AuthStackParamList } from '../navigation/AuthNavigator';
 import { createUserWithEmailAndPassword } from 'firebase/auth';
@@ -25,14 +24,11 @@ type Props = {
   navigation: RegisterScreenNavigationProp;
 };
 
-type UserRole = 'patient' | 'doctor';
-
 export default function RegisterScreen({ navigation }: Props) {
   const [fullName, setFullName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState<UserRole>('patient');
   const [loading, setLoading] = useState(false);
 
   const handleRegister = async () => {
@@ -191,20 +187,7 @@ export default function RegisterScreen({ navigation }: Props) {
             />
           </View>
 
-          <View style={styles.inputContainer}>
-            <Text style={styles.label}>Account Type</Text>
-            <View style={styles.pickerContainer}>
-              <Picker
-                selectedValue={role}
-                onValueChange={(itemValue) => setRole(itemValue)}
-                style={styles.picker}
-                enabled={!loading}
-              >
-                <Picker.Item label="Patient" value="patient" />
-                <Picker.Item label="Doctor" value="doctor" />
-              </Picker>
-            </View>
-          </View>
+          {/* Account type is always patient — doctors are added by admin only */}
 
           <TouchableOpacity
             style={[styles.registerButton, loading && styles.registerButtonDisabled]}

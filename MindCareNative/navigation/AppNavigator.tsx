@@ -40,9 +40,13 @@ export type AppStackParamList = {
 
 const Stack = createNativeStackNavigator<AppStackParamList>();
 
-export default function AppNavigator() {
+export default function AppNavigator({ userRole }: { userRole: string }) {
+  const initialRoute: keyof AppStackParamList =
+    userRole === 'doctor' ? 'DoctorDashboard' : 'PatientDashboard';
+
   return (
     <Stack.Navigator
+      initialRouteName={initialRoute}
       screenOptions={{
         headerStyle: {
           backgroundColor: '#667eea',

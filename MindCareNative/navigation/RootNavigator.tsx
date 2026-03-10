@@ -8,17 +8,6 @@ import { setUserContext, clearUserContext } from '../config/sentry';
 import AuthNavigator from './AuthNavigator';
 import AppNavigator from './AppNavigator';
 
-/**
- * Root Navigator - Conditionally renders AuthStack or AppStack
- * based on Firebase Authentication state
- * 
- * Flow:
- * 1. Listen to Firebase auth state changes
- * 2. If user is null → Show AuthNavigator (Login/Register)
- * 3. If user exists → Fetch user data from Firestore → Show AppNavigator
- * 4. Set Sentry user context for error tracking
- */
-
 export default function RootNavigator() {
   const [user, setUser] = useState<User | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
@@ -29,21 +18,17 @@ export default function RootNavigator() {
       setUser(currentUser);
 
       if (currentUser) {
-        // User authenticated - fetch role from Firestore
         try {
           const userDoc = await getDoc(doc(db, 'users', currentUser.uid));
-          if (userDoc.exists()) {
-            const role = userDoc.data()?.role || 'patient';
-            setUserRole(role);
-          }
-          
-          // Set Sentry user context
-          setUserContext(currentUser.uid, currentUser.email || undefined, userRole || undefined);
+          // Use local `role` variable — not stale `userRole` state
+          const role = userDoc.exists() ? (userDoc.data()?.role || 'patient') : 'patient';
+          setUserRole(role);
+          setUserContext(currentUser.uid, currentUser.email || undefined, role);
         } catch (error) {
           console.error('Error fetching user data:', error);
+          setUserRole('patient');
         }
       } else {
-        // User logged out - clear context
         setUserRole(null);
         clearUserContext();
       }
@@ -54,7 +39,6 @@ export default function RootNavigator() {
     return () => unsubscribe();
   }, []);
 
-  // Show loading spinner during auth state initialization
   if (loading) {
     return (
       <View style={styles.loadingContainer}>
@@ -66,11 +50,9 @@ export default function RootNavigator() {
   return (
     <NavigationContainer>
       {user === null ? (
-        // User NOT authenticated → Show AuthStack (Login/Register)
         <AuthNavigator />
       ) : (
-        // User authenticated → Show AppStack (Dashboards/Features)
-        <AppNavigator />
+        <AppNavigator userRole={userRole || 'patient'} />
       )}
     </NavigationContainer>
   );

@@ -1,9 +1,9 @@
 import { initializeApp } from 'firebase/app';
-import { getAuth } from 'firebase/auth';
+import { initializeAuth, getAuth, getReactNativePersistence } from 'firebase/auth';
 import { getFirestore } from 'firebase/firestore';
+import { Platform } from 'react-native';
 import Constants from 'expo-constants';
 
-// Firebase configuration from environment variables
 const firebaseConfig = {
   apiKey: Constants.expoConfig?.extra?.firebaseApiKey || process.env.EXPO_PUBLIC_FIREBASE_API_KEY,
   authDomain: Constants.expoConfig?.extra?.firebaseAuthDomain || process.env.EXPO_PUBLIC_FIREBASE_AUTH_DOMAIN,
@@ -13,11 +13,26 @@ const firebaseConfig = {
   appId: Constants.expoConfig?.extra?.firebaseAppId || process.env.EXPO_PUBLIC_FIREBASE_APP_ID,
 };
 
-// Initialize Firebase
 const app = initializeApp(firebaseConfig);
 
-// Initialize Firebase services
-export const auth = getAuth(app);
+// On native: persist auth tokens in SecureStore (OS-level encrypted storage)
+// On web: use Firebase default (IndexedDB / localStorage)
+function buildAuth() {
+  if (Platform.OS === 'web') {
+    return getAuth(app);
+  }
+  // eslint-disable-next-line @typescript-eslint/no-var-requires
+  const SecureStore = require('expo-secure-store');
+  return initializeAuth(app, {
+    persistence: getReactNativePersistence({
+      getItem: (key: string) => SecureStore.getItemAsync(key),
+      setItem: (key: string, value: string) => SecureStore.setItemAsync(key, value),
+      removeItem: (key: string) => SecureStore.deleteItemAsync(key),
+    }),
+  });
+}
+
+export const auth = buildAuth();
 export const db = getFirestore(app);
 
 export default app;

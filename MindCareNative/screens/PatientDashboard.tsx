@@ -70,6 +70,10 @@ export default function PatientDashboard({ navigation, route }: Props) {
         const userDoc = await getDoc(doc(db, 'users', userId));
         if (userDoc.exists()) {
           const data = userDoc.data();
+          if (data.role === 'doctor') {
+            navigation.replace('DoctorDashboard');
+            return;
+          }
           setUserName(data.name || data.fullName || 'Patient');
         }
       } catch (error) {
