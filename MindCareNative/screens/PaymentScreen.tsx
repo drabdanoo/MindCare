@@ -16,6 +16,7 @@ import { db } from '../config/firebase';
 import { AppStackParamList } from '../navigation/AppNavigator';
 import { PAYMENT_CONFIG, WalletOption } from '../config/paymentConfig';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
+import { captureException } from '../config/sentry';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'PaymentScreen'>;
 type RouteProps = RouteProp<AppStackParamList, 'PaymentScreen'>;
@@ -53,6 +54,7 @@ export default function PaymentScreen({ navigation, route }: Props) {
             navigation.goBack();
         } catch (error) {
             console.error('Error submitting payment:', error);
+            captureException(error as Error);
             showErrorToast('Failed to submit payment. Please try again.');
         } finally {
             setSubmitting(false);

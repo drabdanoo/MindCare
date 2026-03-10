@@ -217,6 +217,8 @@ export default function PatientDashboard({ navigation, route }: Props) {
           setUserName(data.name || data.fullName || 'Patient');
         }
         setRefreshing(false);
+      }).catch(() => {
+        setRefreshing(false);
       });
     } else {
       setRefreshing(false);

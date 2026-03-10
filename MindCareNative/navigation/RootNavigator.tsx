@@ -4,7 +4,7 @@ import { NavigationContainer } from '@react-navigation/native';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { doc, getDoc } from 'firebase/firestore';
 import { auth, db } from '../config/firebase';
-import { setUserContext, clearUserContext } from '../config/sentry';
+import { setUserContext, clearUserContext, captureException } from '../config/sentry';
 import AuthNavigator from './AuthNavigator';
 import AppNavigator from './AppNavigator';
 
@@ -26,6 +26,7 @@ export default function RootNavigator() {
           setUserContext(currentUser.uid, currentUser.email || undefined, role);
         } catch (error) {
           console.error('Error fetching user data:', error);
+          captureException(error as Error);
           setUserRole('patient');
         }
       } else {

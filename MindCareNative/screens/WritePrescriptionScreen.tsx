@@ -15,6 +15,7 @@ import { collection, addDoc } from 'firebase/firestore';
 import { db, auth } from '../config/firebase';
 import { AppStackParamList } from '../navigation/AppNavigator';
 import { showErrorToast, showSuccessToast } from '../utils/toast';
+import { captureException } from '../config/sentry';
 
 type NavigationProp = NativeStackNavigationProp<AppStackParamList, 'WritePrescription'>;
 type RouteProps = RouteProp<AppStackParamList, 'WritePrescription'>;
@@ -124,6 +125,7 @@ export default function WritePrescriptionScreen({ navigation, route }: Props) {
             navigation.goBack();
         } catch (error) {
             console.error('Error writing prescription:', error);
+            captureException(error as Error);
             showErrorToast('Failed to save prescription. Please try again.');
         } finally {
             setSubmitting(false);

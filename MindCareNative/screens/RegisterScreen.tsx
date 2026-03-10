@@ -76,7 +76,7 @@ export default function RegisterScreen({ navigation }: Props) {
         fullName: fullName.trim(),
         name: fullName.trim(), // For compatibility with both name fields
         email: email.trim().toLowerCase(),
-        role,
+        role: 'patient',
         createdAt: new Date().toISOString(),
       });
 

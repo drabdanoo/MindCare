@@ -57,9 +57,8 @@ export default function MeetingScreen() {
                     event.grant(event.resources);
                 }}
                 userAgent="Mozilla/5.0 (Linux; Android 10; Android SDK built for x86) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.120 Mobile Safari/537.36"
-                onError={(syntheticEvent) => {
-                    const { nativeEvent } = syntheticEvent;
-                    Alert.alert('Error', 'Failed to load meeting: ' + nativeEvent.description);
+                onError={() => {
+                    Alert.alert('Connection Error', 'Failed to load the meeting room. Please check your connection and try again.');
                     navigation.goBack();
                 }}
             />

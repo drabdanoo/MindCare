@@ -149,6 +149,8 @@ export default function DoctorDashboard({ navigation, route }: Props) {
           setUserName(data.name || data.fullName || 'Doctor');
         }
         setRefreshing(false);
+      }).catch(() => {
+        setRefreshing(false);
       });
     } else {
       setRefreshing(false);
