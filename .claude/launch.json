@@ -1,0 +1,29 @@
+{
+  "version": "0.0.1",
+  "configurations": [
+    {
+      "name": "web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npm", "run", "dev"],
+      "port": 3000
+    },
+    {
+      "name": "expo",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npm", "run", "start", "--prefix", "MindCareNative"],
+      "port": 8081
+    },
+    {
+      "name": "expo-web",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npm", "--prefix", "MindCareNative", "run", "web", "--", "--clear"],
+      "port": 8081
+    },
+    {
+      "name": "firebase-emulators",
+      "runtimeExecutable": "cmd",
+      "runtimeArgs": ["/c", "npm", "run", "firebase:emulate"],
+      "port": 4000
+    }
+  ]
+}
